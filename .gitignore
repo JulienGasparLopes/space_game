@@ -1,0 +1,6 @@
+.pypy_cache
+*.lock
+mypy.ini
+*.toml
+settings.json
+__pycache__
