@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from maths.vertex import Vertex2f, Vertex3f
-from maths.colors import WHITE, RED
+from maths.vertex import Vertex3f
+from maths.colors import BLACK
 
-TILE_SIZE = 20
+TILE_SIZE = 60
 
 
 @dataclass
@@ -11,5 +11,4 @@ class Tile:
     is_wall: bool = False
 
 
-GROUND = Tile(WHITE, False)
-WALL = Tile(RED, True)
+VOID = Tile(BLACK, False)

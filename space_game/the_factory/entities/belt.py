@@ -1,0 +1,116 @@
+from enum import Enum
+from typing import Any, NamedTuple
+from game_logic.entity import Entity
+from game_logic.tile import TILE_SIZE
+from graphics.renderer_tk import Image
+from graphics.renderer import Renderer
+from maths.vertex import Vertex2f
+from the_factory.entities.entity import Direction
+from the_factory.entities.material import Material
+
+BELT_IMAGE_PATH = "space_game/the_factory/entities/images/belt.png"
+
+DIRECTION_TO_IMAGE = {
+    Direction.NORTH: Image(BELT_IMAGE_PATH, 180),
+    Direction.EAST: Image(BELT_IMAGE_PATH, 90),
+    Direction.SOUTH: Image(BELT_IMAGE_PATH, 0),
+    Direction.WEST: Image(BELT_IMAGE_PATH, 270),
+}
+
+
+class Belt(Entity):
+    _material_on_input: Material | None = None
+    _material_on_belt: Material | None = None
+    _material_on_output: Material | None = None
+
+    _material_per_minute: int = 60
+
+    _time_ms_on_input: int = 0
+    _time_ms_on_belt: int = 0
+
+    def __init__(
+        self, direction: Direction = Direction.NORTH, material_per_minute: int = 60
+    ) -> None:
+        super().__init__(DIRECTION_TO_IMAGE.get(direction), 1, 1)
+        self._direction = direction
+        self._material_per_minute = material_per_minute
+        self._time_ms_per_segment = (60 * 1000 // 2) // self._material_per_minute
+        self._time_ms_on_belt = self._time_ms_per_segment
+        self._time_ms_on_input = self._time_ms_per_segment
+
+    def render(self, renderer: Renderer) -> None:
+        super().render(renderer)
+        if self._material_on_input:
+            self._material_on_input.render(renderer)
+        if self._material_on_belt:
+            self._material_on_belt.render(renderer)
+        if self._material_on_output:
+            self._material_on_output.render(renderer)
+
+    def add_material_to_belt(
+        self, material: Material, direction: Direction | None = None
+    ) -> bool:
+        """direction == None -> add directly on belt"""
+        if direction is None and not (
+            self._material_on_input or self._material_on_belt
+        ):
+            self._material_on_belt = material
+            self._time_ms_on_belt = self._time_ms_per_segment
+            return True
+        elif (
+            direction != self._direction
+            and not self._material_on_input
+            and not (self._material_on_belt and self._material_on_output)
+        ):  # Cant add to output
+            self._material_on_input = material
+            self._time_ms_on_input = self._time_ms_per_segment
+            return True
+
+        return False
+
+    def update(self, delta_ms: int, map: Any) -> None:  # TODO: type this
+        if self._material_on_belt and not self._material_on_output:
+            self._time_ms_on_belt -= delta_ms
+            if self._time_ms_on_belt <= 0:
+                self._material_on_output = self._material_on_belt
+                self._material_on_belt = None
+                self._time_ms_on_belt = self._time_ms_per_segment
+
+        if self._material_on_input:
+            expected = self._time_ms_on_input - delta_ms
+            min_authorized = self._time_ms_on_belt if self._material_on_belt else 0
+            self._time_ms_on_input = max(expected, min_authorized)
+            if self._time_ms_on_input <= 0:
+                self._material_on_belt = self._material_on_input
+                self._material_on_input = None
+                self._time_ms_on_input = self._time_ms_per_segment
+                # TODO: do smthg with self._material_on_belt
+
+        if self._material_on_belt:
+            offset = self._time_ms_on_belt / self._time_ms_per_segment
+            pos = self._position.translated(
+                Vertex2f((2 - offset) * TILE_SIZE // 2, TILE_SIZE // 2)
+            )
+            self._material_on_belt.set_position(pos, is_center_position=True)
+
+        if self._material_on_input:
+            offset = self._time_ms_on_input / self._time_ms_per_segment
+            pos = self._position.translated(
+                Vertex2f((1 - offset) * TILE_SIZE // 2, TILE_SIZE // 2)
+            )
+            self._material_on_input.set_position(pos, is_center_position=True)
+
+        if self._material_on_output:
+            target = map.get_belt_at_tile_position(
+                self.tile_position.translated(self._direction.value.vertex)
+            )
+            added = False
+            if target:
+                added = target.add_material_to_belt(
+                    self._material_on_output, self._direction.opposite
+                )
+                if added:
+                    self._material_on_output = None
+            if not added:
+                pos = self._position.translated(Vertex2f(TILE_SIZE, TILE_SIZE // 2))
+                self._material_on_output.set_position(pos, is_center_position=True)

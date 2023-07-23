@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from maths.vertex import Vertex2f
 from graphics.renderer import Renderer
 from game_logic.tile import TILE_SIZE

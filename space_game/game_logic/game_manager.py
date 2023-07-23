@@ -1,32 +1,33 @@
-import time
+from abc import abstractmethod
 from graphics.renderer_tk import RendererTk
-from maths.vertex import Vertex2f
-from maths.colors import RED, WHITE, BLACK
-from game_logic.map import Map, TILE_SIZE
-from game_logic.tile import WALL, GROUND
+from graphics.renderer import Renderer
+from maths.colors import WHITE
+from game_logic.map import Map
 
 
 class GameManager:
+    renderer: Renderer
+    current_map: Map | None = None
+
     def __init__(self) -> None:
-        self.running = True
         self.renderer = RendererTk()
         self.renderer.set_background_color(WHITE)
-        self.renderer.set_button_click_callback(self._on_mouse_click)
-
-        self.map = Map(12, 12)
-        self.map.terrain[2][4] = WALL
+        self.renderer.set_button_click_callback(self.on_mouse_click)
 
     def start(self) -> None:
         self.renderer.start_window(self._internal_loop)
 
-    def _internal_loop(self, delta_ms: float) -> None:
-        self.map.render(self.renderer)
+    def set_current_map(self, map: Map) -> None:
+        self.current_map = map
 
-    def _on_mouse_click(self, x: float, y: float) -> None:
-        tile_x = x // TILE_SIZE
-        tile_y = y // TILE_SIZE
+    def _internal_loop(self, delta_ms: int) -> None:
+        if not self.current_map:
+            raise RuntimeError(
+                "Current map is null, did you called 'set_current_map' ?"
+            )
+        self.current_map.render(self.renderer)
+        self.current_map.update(delta_ms)
 
-        self.map.terrain[tile_x][tile_y] = (
-            WALL if self.map.terrain[tile_x][tile_y] == GROUND else GROUND
-        )
-        self.map._update_rooms()
+    @abstractmethod
+    def on_mouse_click(self, x: float, y: float) -> None:
+        ...

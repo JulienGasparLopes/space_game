@@ -1,11 +1,14 @@
-from typing import Any
-from graphics.renderer_tk import RendererTk
-from game_logic.game_manager import GameManager
+from the_space.space_game_manager import SpaceGameManager
+from the_factory.factory_game_manager import FactoryGameManager
 
 
 def main() -> None:
     print("Launch app")
-    game_manager = GameManager()
+
+    # game_manager = SpaceGameManager()
+    # game_manager.start()
+
+    game_manager = FactoryGameManager()
     game_manager.start()
 
 
