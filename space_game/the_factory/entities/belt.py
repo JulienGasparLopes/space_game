@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Any, NamedTuple
+from typing import Any
 from game_logic.entity import Entity
 from game_logic.tile import TILE_SIZE
 from graphics.renderer_tk import Image
@@ -23,10 +22,12 @@ class Belt(Entity):
     _material_on_belt: Material | None = None
     _material_on_output: Material | None = None
 
-    _material_per_minute: int = 60
+    _material_per_minute: int
 
     _time_ms_on_input: int = 0
     _time_ms_on_belt: int = 0
+
+    _intput_direction_origin: Direction | None
 
     def __init__(
         self, direction: Direction = Direction.NORTH, material_per_minute: int = 60
@@ -63,6 +64,7 @@ class Belt(Entity):
             and not (self._material_on_belt and self._material_on_output)
         ):  # Cant add to output
             self._material_on_input = material
+            self._intput_direction_origin = direction
             self._time_ms_on_input = self._time_ms_per_segment
             return True
 
@@ -83,20 +85,24 @@ class Belt(Entity):
             if self._time_ms_on_input <= 0:
                 self._material_on_belt = self._material_on_input
                 self._material_on_input = None
+                self._intput_direction_origin = None
                 self._time_ms_on_input = self._time_ms_per_segment
                 # TODO: do smthg with self._material_on_belt
 
+        center = self.position.translated(Vertex2f(TILE_SIZE // 2, TILE_SIZE // 2))
+
         if self._material_on_belt:
-            offset = self._time_ms_on_belt / self._time_ms_per_segment
-            pos = self._position.translated(
-                Vertex2f((2 - offset) * TILE_SIZE // 2, TILE_SIZE // 2)
-            )
+            ratio = self._time_ms_on_belt / self._time_ms_per_segment
+            offset = (1 - ratio) * TILE_SIZE // 2
+            pos = center.translated(self._direction.vertex.multiplied(offset))
             self._material_on_belt.set_position(pos, is_center_position=True)
 
-        if self._material_on_input:
-            offset = self._time_ms_on_input / self._time_ms_per_segment
-            pos = self._position.translated(
-                Vertex2f((1 - offset) * TILE_SIZE // 2, TILE_SIZE // 2)
+        if self._material_on_input and self._intput_direction_origin:
+            # self._intput_direction_origin should be True in this case
+            ratio = self._time_ms_on_input / self._time_ms_per_segment
+            offset = (-ratio) * TILE_SIZE // 2
+            pos = center.translated(
+                self._intput_direction_origin.opposite.vertex.multiplied(offset)
             )
             self._material_on_input.set_position(pos, is_center_position=True)
 
@@ -112,5 +118,7 @@ class Belt(Entity):
                 if added:
                     self._material_on_output = None
             if not added:
-                pos = self._position.translated(Vertex2f(TILE_SIZE, TILE_SIZE // 2))
+                pos = center.translated(
+                    self._direction.vertex.multiplied(TILE_SIZE // 2)
+                )
                 self._material_on_output.set_position(pos, is_center_position=True)

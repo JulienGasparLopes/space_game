@@ -12,7 +12,7 @@ class Map(BaseMap):
     def __init__(self, width: int, height: int) -> None:
         super().__init__(width, height)
 
-        chute1 = MaterialChute(1500)
+        chute1 = MaterialChute(250)
         chute1.set_tile_position(Vertex2f(0, 3))
         self.entities.append(chute1)
 
@@ -33,7 +33,7 @@ class Map(BaseMap):
         self.entities.append(fab1)
 
         def create_belt(direction: Direction, position: Vertex2f) -> None:
-            belt = Belt(direction)
+            belt = Belt(direction, 60 * 5)
             belt.set_tile_position(position)
             self.entities.append(belt)
 
@@ -46,11 +46,7 @@ class Map(BaseMap):
         create_belt(Direction.NORTH, Vertex2f(2, 4))
 
         for i in range(2, 6):
-            belt = Belt(Direction.EAST)
-            belt.set_tile_position(Vertex2f(i, 3))
-            self.entities.append(belt)
-            if i == 1:
-                belt.add_material_to_belt(Material(RED), Direction.WEST)
+            create_belt(Direction.EAST, Vertex2f(i, 3))
 
     def render(self, renderer: Renderer) -> None:
         self.entities.sort(key=lambda e: 0 if type(e) == Belt else 1)
