@@ -32,7 +32,7 @@ class Belt(Entity):
     def __init__(
         self, direction: Direction = Direction.NORTH, material_per_minute: int = 60
     ) -> None:
-        super().__init__(DIRECTION_TO_IMAGE.get(direction), 1, 1)
+        super().__init__(DIRECTION_TO_IMAGE.get(direction))
         self._direction = direction
         self._material_per_minute = material_per_minute
         self._time_ms_per_segment = (60 * 1000 // 2) // self._material_per_minute
@@ -48,7 +48,7 @@ class Belt(Entity):
         if self._material_on_output:
             self._material_on_output.render(renderer)
 
-    def add_material_to_belt(
+    def insert_material(
         self, material: Material, direction: Direction | None = None
     ) -> bool:
         """direction == None -> add directly on belt"""
@@ -69,6 +69,13 @@ class Belt(Entity):
             return True
 
         return False
+    
+    def get_material(self) -> Material | None:
+        if self._material_on_belt:
+            material = self._material_on_belt
+            self._material_on_belt = None
+            self._time_ms_on_belt = self._time_ms_per_segment
+            return material
 
     def update(self, delta_ms: int, map: Any) -> None:  # TODO: type this
         if self._material_on_belt and not self._material_on_output:
@@ -108,11 +115,11 @@ class Belt(Entity):
 
         if self._material_on_output:
             target = map.get_belt_at_tile_position(
-                self.tile_position.translated(self._direction.value.vertex)
+                self.tile_position.translated(self._direction.vertex)
             )
             added = False
             if target:
-                added = target.add_material_to_belt(
+                added = target.insert_material(
                     self._material_on_output, self._direction.opposite
                 )
                 if added:

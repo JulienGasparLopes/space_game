@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from maths.vertex import Vertex3f
 from maths.colors import BLACK
 
-TILE_SIZE = 60
+TILE_SIZE = 40
 
 
 @dataclass

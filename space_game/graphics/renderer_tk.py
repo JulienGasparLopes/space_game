@@ -6,6 +6,8 @@ from tkinter import Canvas
 from maths.vertex import Vertex2f, Vertex3f
 from typing import Callable
 
+from space_game.game_logic.tile import TILE_SIZE
+
 
 def _v3f_to_hex(color: Vertex3f) -> str:
     return "#{:02x}{:02x}{:02x}".format(color.x, color.y, color.z)
@@ -18,7 +20,7 @@ class Image(BaseImage):
     def __init__(self, path: str, rotation_angle: int | None = None) -> None:
         self.tk_image = PilImage.open(path)
         if rotation_angle:
-            self.tk_image = self.tk_image.rotate(rotation_angle)
+            self.tk_image = self.tk_image.rotate(rotation_angle).resize((TILE_SIZE, TILE_SIZE))
 
     def render(self, canvas: Canvas, position: Vertex2f) -> None:
         if not self.image:
