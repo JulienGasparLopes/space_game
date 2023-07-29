@@ -1,17 +1,19 @@
+from collections import namedtuple
 from enum import Enum
-from typing import NamedTuple
+from typing import cast
 from game_logic.entity import Entity as BaseEntity
 from graphics.renderer import Image
 from maths.vertex import Vertex2f, Vertex3f
+from space_game.game_logic.tile import TILE_SIZE
 
-DirectionValue = NamedTuple("DirectionValue", [("vertex", Vertex2f)])
+DirectionValue = namedtuple("DirectionValue", ["vertex"])
 
 
 class Direction(Enum):
-    NORTH = DirectionValue(Vertex2f(0, -1))
-    EAST = DirectionValue(Vertex2f(1, 0))
-    SOUTH = DirectionValue(Vertex2f(0, 1))
-    WEST = DirectionValue(Vertex2f(-1, 0))
+    NORTH = DirectionValue(vertex=Vertex2f(0, -1))
+    EAST = DirectionValue(vertex=Vertex2f(1, 0))
+    SOUTH = DirectionValue(vertex=Vertex2f(0, 1))
+    WEST = DirectionValue(vertex=Vertex2f(-1, 0))
 
     @property
     def opposite(self) -> "Direction":
@@ -26,14 +28,14 @@ class Direction(Enum):
 
     @property
     def vertex(self) -> Vertex2f:
-        return self.value.vertex
+        return self.value[0]
 
 
 class Entity(BaseEntity):
     _direction: Direction
 
     def __init__(
-        self, content: Vertex3f | Image, width: int = 1, height: int = 1
+        self, content: Vertex3f | Image, width: int = TILE_SIZE, height: int = TILE_SIZE
     ) -> None:
         super().__init__(content, width, height)
         self._direction = Direction.NORTH

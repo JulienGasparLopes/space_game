@@ -13,7 +13,7 @@ class Entity:
     height: int
 
     def __init__(
-        self, content: Vertex3f | Image, width: int = 1, height: int = 1
+        self, content: Vertex3f | Image, width: int = TILE_SIZE, height: int = TILE_SIZE
     ) -> None:
         self.content = content
         self.width = width

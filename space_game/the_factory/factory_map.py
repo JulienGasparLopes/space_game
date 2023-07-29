@@ -16,8 +16,8 @@ class Map(BaseMap):
         chute1.set_tile_position(Vertex2f(0, 3))
         self.entities.append(chute1)
 
-        chute2 = MaterialChute(1500)
-        chute2.set_tile_position(Vertex2f(1, 6))
+        chute2 = MaterialChute(400)
+        chute2.set_tile_position(Vertex2f(1, 9))
         self.entities.append(chute2)
 
         transfo1 = Transformator()
@@ -37,6 +37,7 @@ class Map(BaseMap):
             belt.set_tile_position(position)
             self.entities.append(belt)
 
+        # chute1 to transfo1
         create_belt(Direction.SOUTH, Vertex2f(1, 3))
         create_belt(Direction.SOUTH, Vertex2f(1, 4))
         create_belt(Direction.EAST, Vertex2f(1, 5))
@@ -44,9 +45,24 @@ class Map(BaseMap):
         create_belt(Direction.NORTH, Vertex2f(3, 5))
         create_belt(Direction.WEST, Vertex2f(3, 4))
         create_belt(Direction.NORTH, Vertex2f(2, 4))
-
         for i in range(2, 6):
             create_belt(Direction.EAST, Vertex2f(i, 3))
+            
+        # chute2 to transfo2
+        for i in range(2, 6):
+            create_belt(Direction.EAST, Vertex2f(i, 9))
+            
+        # transfo1 to fab1
+        create_belt(Direction.SOUTH, Vertex2f(9, 3))
+        create_belt(Direction.SOUTH, Vertex2f(9, 4))
+        for i in range(9, 14):
+            create_belt(Direction.EAST, Vertex2f(i, 5))
+            
+        # transfo2 to fab1
+        create_belt(Direction.NORTH, Vertex2f(9, 8))
+        create_belt(Direction.NORTH, Vertex2f(9, 9))
+        for i in range(9, 14):
+            create_belt(Direction.EAST, Vertex2f(i, 7))
 
     def render(self, renderer: Renderer) -> None:
         self.entities.sort(key=lambda e: 0 if type(e) == Belt else 1)
