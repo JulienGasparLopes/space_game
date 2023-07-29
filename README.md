@@ -22,11 +22,11 @@ Parts of the code will be splitted into differents libs later
 
 Focused on factory management/optimisation with money, energy, production default systems
 
-- Belt and Material transportation OK
-- Factory processing + input/output OK
-- Material configuration and Crafting recipes WIP
-- Money system WIP
-- Menu abstraction + Editor
+- Belt and Material transportation - OK
+- Factory processing + input/output - OK
+- Material configuration and Crafting recipes - WIP
+- Money system - WIP
+- Menu abstraction + Editor - Next
 
 ## Others game relative subjects:
 
