@@ -1,8 +1,10 @@
-from dataclasses import dataclass
-from typing import Any  # TODO: TypeMe
+from typing import TYPE_CHECKING
 from game_logic.tile import TILE_SIZE
 from graphics.renderer import Image, Renderer
 from maths.vertex import Vertex3f, Vertex2f
+
+if TYPE_CHECKING:
+    from game_logic.map import Map
 
 
 class Entity:
@@ -27,7 +29,7 @@ class Entity:
             self.content,
         )
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         ...
 
     def set_tile_position(self, position: Vertex2f) -> None:

@@ -1,5 +1,4 @@
-from time import process_time
-from typing import Any
+from typing import TYPE_CHECKING
 from maths.colors import GREEN
 from maths.vertex import Vertex2f, Vertex3f
 from graphics.renderer import Renderer
@@ -8,6 +7,9 @@ from maths.colors import BLUE, ORANGE, YELLOW
 from space_game.the_factory.entities.belt import Belt
 from the_factory.entities.entity import Direction, Entity
 from the_factory.entities.material import Material
+
+if TYPE_CHECKING:
+    from the_factory.factory_map import Map
 
 
 class IOFactory(Entity):
@@ -31,14 +33,14 @@ class IOFactory(Entity):
             self.content,
         )
 
-    def update_position(self):
+    def update_position(self) -> None:
         self.set_position(
             self.factory.position.translated(self._position_offset).translated(
                 Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2)
             )
         )
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         ...
 
 
@@ -46,7 +48,7 @@ class FactoryInput(IOFactory):
     def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
         super().__init__(factory, BLUE, position_offset)
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         if len(self._buffer) == 0:
             target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
             if target_belt:
@@ -61,10 +63,10 @@ class FactoryInput(IOFactory):
 
 
 class FactoryOutput(IOFactory):
-    def __init__(self, factory: "Factory", position_offset) -> None:
+    def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
         super().__init__(factory, ORANGE, position_offset)
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         if len(self._buffer) > 0:
             material = self._buffer[0]
             target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
@@ -86,7 +88,7 @@ class FactoryOutput(IOFactory):
 class Factory(Entity):
     inputs: list[FactoryInput]
     outputs: list[FactoryOutput]
-    
+
     process_time_ms: int
     _process_counter: int
     _processing: bool
@@ -112,11 +114,11 @@ class Factory(Entity):
         for io in ios:
             io.render(renderer)
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.update(delta_ms, map)
-            
+
         if self._processing and self._process_counter > 0:
             self._process_counter -= delta_ms
 
@@ -131,12 +133,13 @@ class Factory(Entity):
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.update_position()
-            
+
     def start_processing(self) -> None:
         self._processing = True
 
     def process_done(self) -> bool:
         return False
+
 
 class MaterialChute(Factory):
     _new_material_delay: int
@@ -146,11 +149,11 @@ class MaterialChute(Factory):
         super().__init__(1, 1, [], [FactoryOutput(self, direction.vertex)], delay)
         self._direction = direction
         self.start_processing()
-            
+
     def process_done(self) -> bool:
         return self.outputs[0].insert_material(Material(YELLOW))
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         super().update(delta_ms, map)
         self._processing = True
 
@@ -161,15 +164,15 @@ class Transformator(Factory):
         outputs = [FactoryOutput(self, Vertex2f(3, 1))]
         super().__init__(3, 3, inputs, outputs)
 
-    def update(self, delta_ms: int, map: Any) -> None:
+    def update(self, delta_ms: int, map: Map) -> None:
         super().update(delta_ms, map)
-        
+
         if not self._processing and self.outputs[0].available():
             material = self.inputs[0].get_material()
             if material:
                 material.content = ORANGE
                 self.start_processing()
-                
+
     def process_done(self) -> bool:
         if self.outputs[0].available():
             return self.outputs[0].insert_material(Material(ORANGE))

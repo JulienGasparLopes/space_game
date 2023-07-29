@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING
 from game_logic.entity import Entity
 from game_logic.tile import TILE_SIZE
 from graphics.renderer_tk import Image
@@ -6,6 +6,9 @@ from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
 from the_factory.entities.entity import Direction
 from the_factory.entities.material import Material
+
+if TYPE_CHECKING:
+    from the_factory.factory_map import Map
 
 BELT_IMAGE_PATH = "space_game/the_factory/entities/images/belt.png"
 
@@ -80,7 +83,7 @@ class Belt(Entity):
             return material
         return None
 
-    def update(self, delta_ms: int, map: Any) -> None:  # TODO: type this
+    def update(self, delta_ms: int, map: Map) -> None:
         if self._material_on_belt and not self._material_on_output:
             self._time_ms_on_belt -= delta_ms
             if self._time_ms_on_belt <= 0:
@@ -97,7 +100,6 @@ class Belt(Entity):
                 self._material_on_input = None
                 self._intput_direction_origin = None
                 self._time_ms_on_input = self._time_ms_per_segment
-                # TODO: do smthg with self._material_on_belt
 
         if self._material_on_output:
             target = map.get_belt_at_tile_position(

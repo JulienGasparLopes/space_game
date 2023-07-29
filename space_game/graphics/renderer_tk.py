@@ -18,9 +18,9 @@ class Image(BaseImage):
     image: ImageTk.PhotoImage | None = None
 
     def __init__(self, path: str, rotation_angle: int | None = None) -> None:
-        self.tk_image = PilImage.open(path)
+        self.tk_image = PilImage.open(path).resize((TILE_SIZE, TILE_SIZE))
         if rotation_angle:
-            self.tk_image = self.tk_image.rotate(rotation_angle).resize((TILE_SIZE, TILE_SIZE))
+            self.tk_image = self.tk_image.rotate(rotation_angle)
 
     def render(self, canvas: Canvas, position: Vertex2f) -> None:
         if not self.image:
