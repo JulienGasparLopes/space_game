@@ -83,7 +83,7 @@ class Belt(Entity):
             return material
         return None
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         if self._material_on_belt and not self._material_on_output:
             self._time_ms_on_belt -= delta_ms
             if self._time_ms_on_belt <= 0:

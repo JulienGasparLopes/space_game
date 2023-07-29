@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING
 from maths.colors import GREEN
 from maths.vertex import Vertex2f, Vertex3f
@@ -7,12 +8,13 @@ from maths.colors import BLUE, ORANGE, YELLOW
 from space_game.the_factory.entities.belt import Belt
 from the_factory.entities.entity import Direction, Entity
 from the_factory.entities.material import Material
+from the_factory.game_context import GameContext
 
 if TYPE_CHECKING:
     from the_factory.factory_map import Map
 
 
-class IOFactory(Entity):
+class IOFactory(Entity, ABC):
     factory: "Factory"
 
     _buffer: list[Material]
@@ -40,7 +42,8 @@ class IOFactory(Entity):
             )
         )
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    @abstractproperty
+    def is_available(self) -> bool:
         ...
 
 
@@ -48,7 +51,7 @@ class FactoryInput(IOFactory):
     def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
         super().__init__(factory, BLUE, position_offset)
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         if len(self._buffer) == 0:
             target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
             if target_belt:
@@ -61,12 +64,16 @@ class FactoryInput(IOFactory):
             return self._buffer.pop(0)
         return None
 
+    @property
+    def is_available(self) -> bool:
+        return len(self._buffer) > 0
+
 
 class FactoryOutput(IOFactory):
     def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
         super().__init__(factory, ORANGE, position_offset)
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         if len(self._buffer) > 0:
             material = self._buffer[0]
             target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
@@ -81,11 +88,12 @@ class FactoryOutput(IOFactory):
             return True
         return False
 
-    def available(self) -> bool:
+    @property
+    def is_available(self) -> bool:
         return len(self._buffer) == 0
 
 
-class Factory(Entity):
+class Factory(Entity, ABC):
     inputs: list[FactoryInput]
     outputs: list[FactoryOutput]
 
@@ -109,20 +117,25 @@ class Factory(Entity):
         super().__init__(GREEN, width * TILE_SIZE, height * TILE_SIZE)
 
     def render(self, renderer: Renderer) -> None:
+        self.content = GREEN
+        if self.is_blocked:
+            self.content = Vertex3f(160, 140, 0)
+        elif self.is_processing:
+            self.content = Vertex3f(0, 200, 50)
         super().render(renderer)
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.render(renderer)
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.update(delta_ms, map)
 
-        if self._processing and self._process_counter > 0:
+        if self.is_processing and self._process_counter > 0:
             self._process_counter -= delta_ms
 
-        if self._processing and self._process_counter <= 0:
+        if self.is_processing and self._process_counter <= 0:
             processed = self.process_done()
             if processed:
                 self._process_counter = self.process_time_ms
@@ -137,25 +150,48 @@ class Factory(Entity):
     def start_processing(self) -> None:
         self._processing = True
 
+    @abstractmethod
     def process_done(self) -> bool:
-        return False
+        ...
+
+    @property
+    def is_processing(self) -> bool:
+        return self._processing
+
+    @property
+    def is_blocked(self) -> bool:
+        return self.is_processing and self._process_counter <= 0
 
 
 class MaterialChute(Factory):
-    _new_material_delay: int
-    _new_material_counter: int
-
     def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
         super().__init__(1, 1, [], [FactoryOutput(self, direction.vertex)], delay)
         self._direction = direction
-        self.start_processing()
 
     def process_done(self) -> bool:
         return self.outputs[0].insert_material(Material(YELLOW))
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         super().update(delta_ms, map)
-        self._processing = True
+        if not self.is_processing:
+            if GameContext.get().money_transaction(-20):
+                self.start_processing()
+
+
+class MaterialSeller(Factory):
+    def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
+        super().__init__(1, 1, [FactoryInput(self, direction.vertex)], [], delay)
+        self._direction = direction
+
+    def process_done(self) -> bool:
+        return GameContext.get().money_transaction(100)
+
+    def update(self, delta_ms: int, map: "Map") -> None:
+        super().update(delta_ms, map)
+        if not self.is_processing:
+            material = self.inputs[0].get_material()
+            if material:
+                self.start_processing()
 
 
 class Transformator(Factory):
@@ -164,17 +200,17 @@ class Transformator(Factory):
         outputs = [FactoryOutput(self, Vertex2f(3, 1))]
         super().__init__(3, 3, inputs, outputs)
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    def update(self, delta_ms: int, map: "Map") -> None:
         super().update(delta_ms, map)
 
-        if not self._processing and self.outputs[0].available():
+        if not self.is_processing and self.outputs[0].is_available:
             material = self.inputs[0].get_material()
             if material:
                 material.content = ORANGE
                 self.start_processing()
 
     def process_done(self) -> bool:
-        if self.outputs[0].available():
+        if self.outputs[0].is_available:
             return self.outputs[0].insert_material(Material(ORANGE))
         return False
 
@@ -189,3 +225,17 @@ class Fabricator(Factory):
             FactoryOutput(self, Vertex2f(5, 2)),
         ]
         super().__init__(5, 5, inputs, outputs)
+
+    def update(self, delta_ms: int, map: "Map") -> None:
+        super().update(delta_ms, map)
+
+        if not self.is_processing and self.outputs[0].is_available:
+            if self.inputs[0].is_available and self.inputs[1].is_available:
+                self.inputs[0].get_material()
+                self.inputs[1].get_material()
+                self.start_processing()
+
+    def process_done(self) -> bool:
+        if self.outputs[0].is_available:
+            return self.outputs[0].insert_material(Material(YELLOW))
+        return False

@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from game_logic.tile import TILE_SIZE
 from graphics.renderer import Image, Renderer
@@ -7,7 +8,7 @@ if TYPE_CHECKING:
     from game_logic.map import Map
 
 
-class Entity:
+class Entity(ABC):
     content: Vertex3f | Image
     _tile_position: Vertex2f
     _position: Vertex2f
@@ -29,7 +30,8 @@ class Entity:
             self.content,
         )
 
-    def update(self, delta_ms: int, map: Map) -> None:
+    @abstractmethod
+    def update(self, delta_ms: int, map: "Map") -> None:
         ...
 
     def set_tile_position(self, position: Vertex2f) -> None:

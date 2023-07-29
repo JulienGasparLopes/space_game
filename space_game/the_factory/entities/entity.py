@@ -2,9 +2,11 @@ from collections import namedtuple
 from enum import Enum
 from typing import cast
 from game_logic.entity import Entity as BaseEntity
+from game_logic.map import Map
 from graphics.renderer import Image
 from maths.vertex import Vertex2f, Vertex3f
 from space_game.game_logic.tile import TILE_SIZE
+from abc import ABC, abstractmethod
 
 DirectionValue = namedtuple("DirectionValue", ["vertex"])
 
@@ -31,7 +33,7 @@ class Direction(Enum):
         return self.value[0]
 
 
-class Entity(BaseEntity):
+class Entity(BaseEntity, ABC):
     _direction: Direction
 
     def __init__(

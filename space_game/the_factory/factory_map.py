@@ -1,7 +1,12 @@
 from typing import cast
 from game_logic.map import Map as BaseMap
 from the_factory.entities.belt import Belt, Direction
-from the_factory.entities.factory import MaterialChute, Transformator, Fabricator
+from the_factory.entities.factory import (
+    MaterialChute,
+    MaterialSeller,
+    Transformator,
+    Fabricator,
+)
 from maths.vertex import Vertex2f
 from graphics.renderer import Renderer
 from the_factory.entities.material import Material
@@ -19,6 +24,10 @@ class Map(BaseMap):
         chute2 = MaterialChute(400)
         chute2.set_tile_position(Vertex2f(1, 9))
         self.entities.append(chute2)
+
+        seller1 = MaterialSeller(300, Direction.WEST)
+        seller1.set_tile_position(Vertex2f(20, 12))
+        self.entities.append(seller1)
 
         transfo1 = Transformator()
         transfo1.set_tile_position(Vertex2f(6, 2))
@@ -47,22 +56,26 @@ class Map(BaseMap):
         create_belt(Direction.NORTH, Vertex2f(2, 4))
         for i in range(2, 6):
             create_belt(Direction.EAST, Vertex2f(i, 3))
-            
+
         # chute2 to transfo2
         for i in range(2, 6):
             create_belt(Direction.EAST, Vertex2f(i, 9))
-            
+
         # transfo1 to fab1
         create_belt(Direction.SOUTH, Vertex2f(9, 3))
         create_belt(Direction.SOUTH, Vertex2f(9, 4))
         for i in range(9, 14):
             create_belt(Direction.EAST, Vertex2f(i, 5))
-            
+
         # transfo2 to fab1
         create_belt(Direction.NORTH, Vertex2f(9, 8))
         create_belt(Direction.NORTH, Vertex2f(9, 9))
         for i in range(9, 14):
             create_belt(Direction.EAST, Vertex2f(i, 7))
+
+        # fab1 to seller1
+        for i in range(6, 13):
+            create_belt(Direction.SOUTH, Vertex2f(19, i))
 
     def render(self, renderer: Renderer) -> None:
         self.entities.sort(key=lambda e: 0 if type(e) == Belt else 1)
