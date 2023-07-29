@@ -57,6 +57,7 @@ class Belt(Entity):
         ):
             self._material_on_belt = material
             self._time_ms_on_belt = self._time_ms_per_segment
+            self._update_materials_position()
             return True
         elif (
             direction != self._direction
@@ -66,16 +67,18 @@ class Belt(Entity):
             self._material_on_input = material
             self._intput_direction_origin = direction
             self._time_ms_on_input = self._time_ms_per_segment
+            self._update_materials_position()
             return True
 
         return False
-    
+
     def get_material(self) -> Material | None:
         if self._material_on_belt:
             material = self._material_on_belt
             self._material_on_belt = None
             self._time_ms_on_belt = self._time_ms_per_segment
             return material
+        return None
 
     def update(self, delta_ms: int, map: Any) -> None:  # TODO: type this
         if self._material_on_belt and not self._material_on_output:
@@ -96,6 +99,20 @@ class Belt(Entity):
                 self._time_ms_on_input = self._time_ms_per_segment
                 # TODO: do smthg with self._material_on_belt
 
+        if self._material_on_output:
+            target = map.get_belt_at_tile_position(
+                self.tile_position.translated(self._direction.value.vertex)
+            )
+            if target:
+                added = target.insert_material(
+                    self._material_on_output, self._direction.opposite
+                )
+                if added:
+                    self._material_on_output = None
+
+        self._update_materials_position()
+
+    def _update_materials_position(self) -> None:
         center = self.position.translated(Vertex2f(TILE_SIZE // 2, TILE_SIZE // 2))
 
         if self._material_on_belt:
@@ -114,18 +131,6 @@ class Belt(Entity):
             self._material_on_input.set_position(pos, is_center_position=True)
 
         if self._material_on_output:
-            target = map.get_belt_at_tile_position(
-                self.tile_position.translated(self._direction.vertex)
-            )
-            added = False
-            if target:
-                added = target.insert_material(
-                    self._material_on_output, self._direction.opposite
-                )
-                if added:
-                    self._material_on_output = None
-            if not added:
-                pos = center.translated(
-                    self._direction.vertex.multiplied(TILE_SIZE // 2)
-                )
-                self._material_on_output.set_position(pos, is_center_position=True)
+            offset = -TILE_SIZE // 2
+            pos = center.translated(self._direction.opposite.vertex.multiplied(offset))
+            self._material_on_output.set_position(pos, is_center_position=True)
