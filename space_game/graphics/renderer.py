@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from maths.vertex import Vertex2f, Vertex3f
 
 
-class Image:
+class Image(ABC):
     ...
 
 

@@ -1,3 +1,4 @@
+from graphics.keyboard_tk import Keyboard
 from graphics.renderer import Renderer, Image as BaseImage
 import tkinter as tk
 from PIL import Image as PilImage, ImageTk
@@ -28,9 +29,18 @@ class Image(BaseImage):
         canvas.create_image(position.x, position.y, image=self.image, anchor="nw")
 
 
+MouseClickCallback = Callable[[float, float], None]
+KeyPressedCallback = Callable[[str, bool], None]
+KeyRealseCallback = Callable[[str], None]
+
+
 class RendererTk(Renderer):
     _update_callback: Callable[[float], bool]
-    _handle_mouse_click: Callable[[float, float], None] | None
+
+    _handle_mouse_click: MouseClickCallback | None
+    _keyboard: Keyboard
+
+    _internal_offset: Vertex2f = Vertex2f(0, 0)
 
     FPS = 50
 
@@ -41,26 +51,37 @@ class RendererTk(Renderer):
         )
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Button-1>", self.__handle_mouse_click)
+        self._keyboard = Keyboard(self)
+        self.window.bind("<KeyPress>", self._keyboard._key_press)
+        self.window.bind("<KeyRelease>", self._keyboard._key_release)
 
     def set_background_color(self, color: Vertex3f) -> None:
         self.window.configure(bg=_v3f_to_hex(color))
 
-    def set_button_click_callback(
-        self, callback: Callable[[float, float], None]
-    ) -> None:
+    def set_button_click_callback(self, callback: MouseClickCallback) -> None:
         self._handle_mouse_click = callback
 
+    def set_key_press_callback(self, callback: KeyPressedCallback) -> None:
+        self._handle_key_press = callback
+
+    def set_key_release_callback(self, callback: Callable[[str], None]) -> None:
+        self._handle_key_release = callback
+
     def draw_line(self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f) -> None:
+        p1_t = p1.translated(self._internal_offset)
+        p2_t = p2.translated(self._internal_offset)
         self.canvas.create_line(
-            p1.x, p1.y, p2.x, p2.y, fill=_v3f_to_hex(content), width=2
+            p1_t.x, p1_t.y, p2_t.x, p2_t.y, fill=_v3f_to_hex(content), width=2
         )
 
     def draw_rect(self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f | Image) -> None:
+        p1_t = p1.translated(self._internal_offset)
+        p2_t = p2.translated(self._internal_offset)
         if type(content) == Vertex3f:
-            points = [p1.x, p1.y, p1.x, p2.y, p2.x, p2.y, p2.x, p1.y]
+            points = [p1_t.x, p1_t.y, p1_t.x, p2_t.y, p2_t.x, p2_t.y, p2_t.x, p1_t.y]
             self.canvas.create_polygon(points, fill=_v3f_to_hex(content))
         else:
-            content.render(self.canvas, p1)
+            content.render(self.canvas, p1_t)
 
     def _internal_loop(self) -> None:
         self.canvas.delete("all")
@@ -76,7 +97,20 @@ class RendererTk(Renderer):
         self._internal_loop()
         self.window.mainloop()
 
+    def set_offset(self, offset: Vertex2f | None) -> None:
+        self._internal_offset = offset or Vertex2f(0, 0)
+
+    @property
+    def offset(self) -> Vertex2f:
+        return self._internal_offset.clone()
+
+    @property
+    def keyboard(self) -> Keyboard:
+        return self._keyboard
+
     def __handle_mouse_click(self, event) -> object:  # type: ignore[no-untyped-def]
-        if self._handle_mouse_click:
+        if not self._handle_mouse_click:
+            raise Exception("Mouse click callback is not bound")
+        else:
             self._handle_mouse_click(event.x, event.y)
         return {}

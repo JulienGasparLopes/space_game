@@ -1,6 +1,5 @@
 from graphics.renderer import Renderer
-from maths.vertex import Vertex2f
-from maths.colors import BLACK, GREY, RED
+from maths.vertex import Vertex2f, Vertex3f
 from game_logic.tile import Tile, VOID, TILE_SIZE
 from game_logic.entity import Entity
 from game_logic.room import Room
@@ -44,14 +43,14 @@ class Map:
             renderer.draw_line(
                 Vertex2f(x * TILE_SIZE, 0),
                 Vertex2f(x * TILE_SIZE, self.height * TILE_SIZE),
-                GREY,
+                Vertex3f(240, 240, 240),
             )
 
         for y in range(self.height):
             renderer.draw_line(
                 Vertex2f(0, y * TILE_SIZE),
                 Vertex2f(self.width * TILE_SIZE, y * TILE_SIZE),
-                GREY,
+                Vertex3f(240, 240, 240),
             )
 
     def update(self, delta_ms: int) -> None:

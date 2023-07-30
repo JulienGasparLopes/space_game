@@ -1,11 +1,11 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from graphics.renderer_tk import RendererTk
 from graphics.renderer import Renderer
 from maths.colors import WHITE
 from game_logic.map import Map
 
 
-class GameManager:
+class GameManager(ABC):
     renderer: Renderer
     current_map: Map | None = None
 
@@ -21,12 +21,17 @@ class GameManager:
         self.current_map = map
 
     def _internal_loop(self, delta_ms: int) -> None:
+        self.update(delta_ms)
         if not self.current_map:
             raise RuntimeError(
                 "Current map is null, did you called 'set_current_map' ?"
             )
         self.current_map.render(self.renderer)
         self.current_map.update(delta_ms)
+
+    @abstractmethod
+    def update(self, delta_ms: int) -> None:
+        ...
 
     @abstractmethod
     def on_mouse_click(self, x: float, y: float) -> None:
