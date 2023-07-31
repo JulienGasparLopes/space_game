@@ -33,8 +33,8 @@ class FactoryGameManager(GameManager):
             offset = offset.translated(Vertex2f(-ratio, 0))
         self._camera_direction = offset
 
-        self.renderer.set_offset(
-            self.renderer.offset.translated(self._camera_direction)
+        self.current_map.set_offset(
+            self.current_map.offset.translated(self._camera_direction)
         )
 
     def on_mouse_click(self, x: float, y: float) -> None:

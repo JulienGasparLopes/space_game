@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from graphics.keyboard_tk import Keyboard
 from graphics.renderer import Renderer, Image as BaseImage
 import tkinter as tk
@@ -5,7 +6,7 @@ from PIL import Image as PilImage, ImageTk
 from tkinter import Canvas
 
 from maths.vertex import Vertex2f, Vertex3f
-from typing import Callable
+from typing import Callable, List
 
 from space_game.game_logic.tile import TILE_SIZE
 
@@ -29,6 +30,15 @@ class Image(BaseImage):
         canvas.create_image(position.x, position.y, image=self.image, anchor="nw")
 
 
+@dataclass
+class _RenderInfo:
+    p1: Vertex2f
+    p2: Vertex2f
+    content: Image | Vertex2f
+    z_index: int
+    is_line: bool
+
+
 MouseClickCallback = Callable[[float, float], None]
 KeyPressedCallback = Callable[[str, bool], None]
 KeyRealseCallback = Callable[[str], None]
@@ -40,7 +50,7 @@ class RendererTk(Renderer):
     _handle_mouse_click: MouseClickCallback | None
     _keyboard: Keyboard
 
-    _internal_offset: Vertex2f = Vertex2f(0, 0)
+    _render_info_list: List[_RenderInfo] = []
 
     FPS = 50
 
@@ -67,21 +77,54 @@ class RendererTk(Renderer):
     def set_key_release_callback(self, callback: Callable[[str], None]) -> None:
         self._handle_key_release = callback
 
-    def draw_line(self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f) -> None:
-        p1_t = p1.translated(self._internal_offset)
-        p2_t = p2.translated(self._internal_offset)
-        self.canvas.create_line(
-            p1_t.x, p1_t.y, p2_t.x, p2_t.y, fill=_v3f_to_hex(content), width=2
+    def render_start(self) -> None:
+        self._render_info_list = []
+
+    def render_end(self) -> None:
+        self._render_info_list.sort(key=lambda ri: ri.z_index)
+        for ri in self._render_info_list:
+            if ri.is_line:
+                self.canvas.create_line(
+                    ri.p1.x,
+                    ri.p1.y,
+                    ri.p2.x,
+                    ri.p2.y,
+                    fill=_v3f_to_hex(ri.content),
+                    width=2,
+                )
+            else:
+                if type(ri.content) == Vertex3f:
+                    points = [
+                        ri.p1.x,
+                        ri.p1.y,
+                        ri.p1.x,
+                        ri.p2.y,
+                        ri.p2.x,
+                        ri.p2.y,
+                        ri.p2.x,
+                        ri.p1.y,
+                    ]
+                    self.canvas.create_polygon(points, fill=_v3f_to_hex(ri.content))
+                else:
+                    ri.content.render(self.canvas, ri.p1)
+
+    def draw_line(
+        self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f, z_index: int = 0
+    ) -> None:
+        p1_t = p1.translated(self.offset)
+        p2_t = p2.translated(self.offset)
+        self._render_info_list.append(
+            _RenderInfo(p1_t, p2_t, content, self.z_index + z_index, True)
         )
 
-    def draw_rect(self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f | Image) -> None:
-        p1_t = p1.translated(self._internal_offset)
-        p2_t = p2.translated(self._internal_offset)
-        if type(content) == Vertex3f:
-            points = [p1_t.x, p1_t.y, p1_t.x, p2_t.y, p2_t.x, p2_t.y, p2_t.x, p1_t.y]
-            self.canvas.create_polygon(points, fill=_v3f_to_hex(content))
-        else:
-            content.render(self.canvas, p1_t)
+    def draw_rect(
+        self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f | Image, z_index: int = 0
+    ) -> None:
+        p1_t = p1.translated(self.offset)
+        p2_t = p2.translated(self.offset)
+        self._render_info_list.append(
+            _RenderInfo(p1_t, p2_t, content, self.z_index + z_index, False)
+        )
 
     def _internal_loop(self) -> None:
         self.canvas.delete("all")
@@ -96,13 +139,6 @@ class RendererTk(Renderer):
         self._update_callback = update_callback
         self._internal_loop()
         self.window.mainloop()
-
-    def set_offset(self, offset: Vertex2f | None) -> None:
-        self._internal_offset = offset or Vertex2f(0, 0)
-
-    @property
-    def offset(self) -> Vertex2f:
-        return self._internal_offset.clone()
 
     @property
     def keyboard(self) -> Keyboard:

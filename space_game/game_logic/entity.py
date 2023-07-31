@@ -23,11 +23,12 @@ class Entity(ABC):
         self.height = height
         self.set_tile_position(Vertex2f(0, 0))
 
-    def render(self, renderer: Renderer) -> None:
+    def render(self, renderer: Renderer, z_index: int = 0) -> None:
         renderer.draw_rect(
             Vertex2f(self._position.x, self._position.y),
             Vertex2f(self._position.x + self.width, self._position.y + self.height),
             self.content,
+            z_index,
         )
 
     @abstractmethod

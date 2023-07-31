@@ -45,11 +45,11 @@ class Belt(Entity):
     def render(self, renderer: Renderer) -> None:
         super().render(renderer)
         if self._material_on_input:
-            self._material_on_input.render(renderer)
+            self._material_on_input.render(renderer, 1)
         if self._material_on_belt:
-            self._material_on_belt.render(renderer)
+            self._material_on_belt.render(renderer, 1)
         if self._material_on_output:
-            self._material_on_output.render(renderer)
+            self._material_on_output.render(renderer, 1)
 
     def insert_material(
         self, material: Material, direction: Direction | None = None

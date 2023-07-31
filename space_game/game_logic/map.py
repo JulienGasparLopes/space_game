@@ -1,3 +1,5 @@
+from abc import ABC
+from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f, Vertex3f
 from game_logic.tile import Tile, VOID, TILE_SIZE
@@ -5,7 +7,7 @@ from game_logic.entity import Entity
 from game_logic.room import Room
 
 
-class Map:
+class Map(GraphicComponent, ABC):
     width: int
     height: int
     terrain: list[list[Tile]]

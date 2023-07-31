@@ -88,3 +88,6 @@ class Map(BaseMap):
         if len(possible_targets) == 1:
             return cast(Belt, possible_targets[0])
         return None
+
+    def on_mouse_click(self, x: float, y: float) -> bool:
+        return False
