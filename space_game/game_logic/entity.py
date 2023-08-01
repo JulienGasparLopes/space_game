@@ -70,8 +70,8 @@ class Entity(ABC):
         self._position = new_position
         self._tile_position = new_tile_position
 
-    def collides(self, entity: "Entity") -> bool:
-        return self.rectangle.collides(entity.rectangle)
+    def collides(self, entity: "Entity", strict: bool = True) -> bool:
+        return self.rectangle.collides(entity.rectangle, strict)
 
     @property
     def tile_position(self) -> Vertex2f:

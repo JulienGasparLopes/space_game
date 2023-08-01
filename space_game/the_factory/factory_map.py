@@ -102,7 +102,7 @@ class Map(BaseMap):
         if selected_entity := game_context.selected_entity:
             collides = any(
                 [
-                    e.collides(selected_entity)
+                    e.collides(selected_entity, strict=False)
                     for e in self.entities
                     if e != selected_entity
                 ]

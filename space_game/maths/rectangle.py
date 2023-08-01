@@ -32,10 +32,18 @@ class Rectangle:
             )
         return self._p1.x < point.x < self._p2.x and self._p1.y < point.y < self._p2.y
 
-    def collides(self, rectangle: "Rectangle") -> bool:
+    def collides(self, rectangle: "Rectangle", strict: bool = True) -> bool:
+        if self == rectangle:
+            return True
+
         collides = False
         for point in self.get_all_points():
-            collides = collides or rectangle.contains(point)
+            collides = collides or rectangle.contains(point, strict)
         for point in rectangle.get_all_points():
-            collides = collides or self.contains(point)
+            collides = collides or self.contains(point, strict)
         return collides
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Rectangle):
+            return self._p1 == other._p1 and self._p2 == other._p2
+        return False
