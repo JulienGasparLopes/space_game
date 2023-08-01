@@ -14,8 +14,8 @@ Parts of the code will be splitted into differents libs later
 
 - Main game logic (tkinter)
 - Map and Entity update
-- Vertex2f (2dim) and basic operations
-- Input (mouse)
+- Vertex2f (2dim), Rectangle and basic operations
+- Input (mouse, keyboard)
 - Basic graphical abstraction
 
 ## FactorIO like game :
@@ -24,9 +24,11 @@ Focused on factory management/optimisation with money, energy, production defaul
 
 - Belt and Material transportation - OK
 - Factory processing + input/output - OK
-- Material configuration and Crafting recipes - WIP
+- Entity collisions (overlapping) - OK
 - Money system - WIP
-- Menu abstraction + Editor - Next
+- Menu abstraction + Editor - WIP
+- Editor - WIP
+- Material configuration and Crafting recipes - Next
 
 ## Others game relative subjects:
 
