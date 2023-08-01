@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING
-from maths.colors import GREEN
+from maths.colors import GREEN, PURPLE
 from maths.vertex import Vertex2f, Vertex3f
 from graphics.renderer import Renderer
 from game_logic.tile import TILE_SIZE
@@ -206,7 +206,6 @@ class Transformator(Factory):
         if not self.is_processing and self.outputs[0].is_available:
             material = self.inputs[0].get_material()
             if material:
-                material.content = ORANGE
                 self.start_processing()
 
     def process_done(self) -> bool:
@@ -237,5 +236,5 @@ class Fabricator(Factory):
 
     def process_done(self) -> bool:
         if self.outputs[0].is_available:
-            return self.outputs[0].insert_material(Material(YELLOW))
+            return self.outputs[0].insert_material(Material(PURPLE))
         return False

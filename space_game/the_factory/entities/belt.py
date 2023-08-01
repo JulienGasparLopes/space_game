@@ -63,7 +63,8 @@ class Belt(Entity):
             self._update_materials_position()
             return True
         elif (
-            direction != self._direction
+            direction is not None
+            and direction != self._direction
             and not self._material_on_input
             and not (self._material_on_belt and self._material_on_output)
         ):  # Cant add to output
