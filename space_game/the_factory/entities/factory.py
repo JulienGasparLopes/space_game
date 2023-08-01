@@ -33,6 +33,7 @@ class IOFactory(Entity, ABC):
             Vertex2f(self.position.x - 4, self.position.y - 4),
             Vertex2f(self.position.x + 4, self.position.y + 4),
             self.content,
+            z_index=2,
         )
 
     def update_position(self) -> None:
@@ -143,6 +144,17 @@ class Factory(Entity, ABC):
 
     def set_tile_position(self, position: Vertex2f) -> None:
         super().set_tile_position(position)
+        ios: list[IOFactory] = [*self.inputs, *self.outputs]
+        for io in ios:
+            io.update_position()
+
+    def set_position(
+        self,
+        position: Vertex2f,
+        is_center_position: bool = False,
+        bound_to_tile: bool = False,
+    ) -> None:
+        super().set_position(position, is_center_position, bound_to_tile)
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.update_position()

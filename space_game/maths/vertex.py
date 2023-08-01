@@ -23,6 +23,14 @@ class Vertex2f:
     def multiplied(self, mult: float) -> "Vertex2f":
         return Vertex2f(self._x * mult, self._y * mult)
 
+    def divided(self, div: float, floor: bool = False) -> "Vertex2f":
+        if floor:
+            return Vertex2f(self._x // div, self._y // div)
+        return Vertex2f(self._x / div, self._y / div)
+
+    def inverted(self) -> "Vertex2f":
+        return Vertex2f(-self._x, -self._y)
+
     @property
     def x(self) -> float:
         return self._x

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from graphics.keyboard_tk import Keyboard
+from graphics.keyboard import Keyboard
+from graphics.mouse import Mouse
 from graphics.renderer import Renderer, Image as BaseImage
 import tkinter as tk
 from PIL import Image as PilImage, ImageTk
@@ -39,7 +40,7 @@ class _RenderInfo:
     is_line: bool
 
 
-MouseClickCallback = Callable[[float, float], None]
+MouseClickCallback = Callable[[Vertex2f], None]
 KeyPressedCallback = Callable[[str, bool], None]
 KeyRealseCallback = Callable[[str], None]
 
@@ -49,6 +50,7 @@ class RendererTk(Renderer):
 
     _handle_mouse_click: MouseClickCallback | None
     _keyboard: Keyboard
+    _mouse: Mouse
 
     _render_info_list: List[_RenderInfo] = []
 
@@ -61,9 +63,11 @@ class RendererTk(Renderer):
         )
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Button-1>", self.__handle_mouse_click)
-        self._keyboard = Keyboard(self)
+        self._keyboard = Keyboard()
+        self._mouse = Mouse()
         self.window.bind("<KeyPress>", self._keyboard._key_press)
         self.window.bind("<KeyRelease>", self._keyboard._key_release)
+        self.window.bind("<Motion>", self._mouse._mouse_move)
 
     def set_background_color(self, color: Vertex3f) -> None:
         self.window.configure(bg=_v3f_to_hex(color))
@@ -144,9 +148,13 @@ class RendererTk(Renderer):
     def keyboard(self) -> Keyboard:
         return self._keyboard
 
+    @property
+    def mouse(self) -> Mouse:
+        return self._mouse
+
     def __handle_mouse_click(self, event) -> object:  # type: ignore[no-untyped-def]
         if not self._handle_mouse_click:
             raise Exception("Mouse click callback is not bound")
         else:
-            self._handle_mouse_click(event.x, event.y)
+            self._handle_mouse_click(Vertex2f(event.x, event.y))
         return {}

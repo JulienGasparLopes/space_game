@@ -4,7 +4,6 @@ from graphics.renderer_tk import RendererTk
 from graphics.renderer import Renderer
 from maths.colors import WHITE
 from game_logic.map import Map
-from the_factory.gui.current_inventory_gui import CurrentInventoryGui
 
 
 class GameManager(ABC):
@@ -18,8 +17,6 @@ class GameManager(ABC):
 
         self.graphic_manager = GraphicManager(self.renderer)
         self.renderer.set_button_click_callback(self.graphic_manager.on_mouse_click)
-
-        self.graphic_manager.add_component(CurrentInventoryGui())
 
     def start(self) -> None:
         self.renderer.start_window(self._internal_loop)

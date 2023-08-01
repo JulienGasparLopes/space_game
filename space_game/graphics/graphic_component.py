@@ -27,5 +27,5 @@ class GraphicComponent(ABC):
         ...
 
     @abstractmethod
-    def on_mouse_click(self, x: float, y: float) -> bool:
+    def on_mouse_click(self, position: Vertex2f) -> bool:
         ...

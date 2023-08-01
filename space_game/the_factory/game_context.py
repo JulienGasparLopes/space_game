@@ -1,5 +1,9 @@
+from game_logic.entity import Entity
+
+
 class GameContext:
     _money: int
+    _selected_entity: Entity | None = None
 
     def __init__(self) -> None:
         self._money = 1050
@@ -21,9 +25,16 @@ class GameContext:
                 return True
         return False
 
+    def set_select_entity(self, entity_type: Entity | None = None) -> None:
+        self._selected_entity = entity_type
+
     @property
     def money(self) -> int:
         return self._money
+
+    @property
+    def selected_entity(self) -> Entity | None:
+        return self._selected_entity
 
 
 _GAME_CONTEXT: GameContext | None = None

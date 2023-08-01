@@ -1,15 +1,7 @@
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from graphics.renderer_tk import RendererTk
-
-
 class Keyboard:
-    _renderer: "RendererTk"
     _key_pressed: dict[str, bool]
 
-    def __init__(self, renderer: "RendererTk"):
-        self._renderer = renderer
+    def __init__(self) -> None:
         self._key_pressed = {}
 
     def _key_press(self, event) -> None:  # type: ignore[no-untyped-def]

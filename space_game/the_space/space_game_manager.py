@@ -1,5 +1,6 @@
 from game_logic.game_manager import GameManager as BaseGameManager
 from game_logic.tile import TILE_SIZE
+from maths.vertex import Vertex2f
 from the_space.space_tile import GROUND, WALL
 from the_space.space_map import Map
 
@@ -19,9 +20,9 @@ class SpaceGameManager(BaseGameManager):
 
         self.set_current_map(map)
 
-    def on_mouse_click(self, x: float, y: float) -> None:
-        tile_x = x // TILE_SIZE
-        tile_y = y // TILE_SIZE
+    def on_mouse_click(self, position: Vertex2f) -> None:
+        tile_x = position.x // TILE_SIZE
+        tile_y = position.y // TILE_SIZE
 
         self.current_map.terrain[tile_x][tile_y] = (
             WALL if self.current_map.terrain[tile_x][tile_y] == GROUND else GROUND

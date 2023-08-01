@@ -1,5 +1,6 @@
 from typing import cast
 from game_logic.map import Map as BaseMap
+from graphics.renderer_tk import RendererTk
 from the_factory.entities.belt import Belt, Direction
 from the_factory.entities.factory import (
     MaterialChute,
@@ -8,9 +9,7 @@ from the_factory.entities.factory import (
     Fabricator,
 )
 from maths.vertex import Vertex2f
-from graphics.renderer import Renderer
-from the_factory.entities.material import Material
-from maths.colors import RED
+from the_factory.game_context import GameContext
 
 
 class Map(BaseMap):
@@ -77,8 +76,17 @@ class Map(BaseMap):
         for i in range(6, 13):
             create_belt(Direction.SOUTH, Vertex2f(19, i))
 
-    def render(self, renderer: Renderer) -> None:
-        self.entities.sort(key=lambda e: 0 if type(e) == Belt else 1)
+    def render(self, renderer: RendererTk) -> None:
+        if selected_entity := GameContext.get().selected_entity:
+            last_z_index = renderer.z_index
+            selected_entity.set_position(
+                renderer.mouse.get_relative_position(self),
+                is_center_position=True,
+                bound_to_tile=True,
+            )
+            renderer.set_z_index(last_z_index + 10)
+            selected_entity.render(renderer)
+            renderer.set_z_index(last_z_index)
         return super().render(renderer)
 
     def get_belt_at_tile_position(self, tile_position: Vertex2f) -> Belt | None:
@@ -89,5 +97,17 @@ class Map(BaseMap):
             return cast(Belt, possible_targets[0])
         return None
 
-    def on_mouse_click(self, x: float, y: float) -> bool:
+    def on_mouse_click(self, position: Vertex2f) -> bool:
+        game_context = GameContext.get()
+        if selected_entity := game_context.selected_entity:
+            collides = any(
+                [
+                    e.collides(selected_entity)
+                    for e in self.entities
+                    if e != selected_entity
+                ]
+            )
+            if not collides:
+                self.entities.append(selected_entity)
+                game_context.set_select_entity()
         return False

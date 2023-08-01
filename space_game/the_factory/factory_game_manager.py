@@ -3,6 +3,7 @@ from graphics.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
 from the_factory.factory_map import Map
 from the_factory.factory_tile import GROUND
+from the_factory.gui.current_inventory_gui import CurrentInventoryGui
 
 
 class FactoryGameManager(GameManager):
@@ -12,6 +13,7 @@ class FactoryGameManager(GameManager):
 
     def __init__(self) -> None:
         super().__init__()
+        self.graphic_manager.add_component(CurrentInventoryGui())
 
         map = Map(40, 25)
         for x in range(map.width):
@@ -37,5 +39,5 @@ class FactoryGameManager(GameManager):
             self.current_map.offset.translated(self._camera_direction)
         )
 
-    def on_mouse_click(self, x: float, y: float) -> None:
+    def on_mouse_click(self, position: Vertex2f) -> None:
         ...

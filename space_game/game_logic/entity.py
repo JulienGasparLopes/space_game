@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from game_logic.tile import TILE_SIZE
 from graphics.renderer import Image, Renderer
+from maths.rectangle import Rectangle
 from maths.vertex import Vertex3f, Vertex2f
 
 if TYPE_CHECKING:
@@ -40,18 +41,37 @@ class Entity(ABC):
         self._position = position.multiplied(TILE_SIZE)
 
     def set_position(
-        self, position: Vertex2f, is_center_position: bool = False
+        self,
+        position: Vertex2f,
+        is_center_position: bool = False,
+        bound_to_tile: bool = False,
     ) -> None:
-        if is_center_position:
-            self._position = Vertex2f(
-                position.x - self.width / 2, position.y - self.height / 2
-            )
+        new_position = self.position
+        new_tile_position = self.tile_position
+        if bound_to_tile:
+            if is_center_position:
+                new_tile_position = position.translated(
+                    Vertex2f(
+                        -(self.width - TILE_SIZE) / 2, -(self.height - TILE_SIZE) / 2
+                    )
+                ).divided(TILE_SIZE, floor=True)
+            else:
+                new_tile_position = position.divided(TILE_SIZE, floor=True)
+            new_position = new_tile_position.multiplied(TILE_SIZE)
         else:
-            self._position = position.clone()
+            if is_center_position:
+                new_position = position.translated(
+                    Vertex2f(-self.width / 2, -self.height / 2)
+                )
+            else:
+                new_position = position.clone()
+            new_tile_position = new_position.divided(TILE_SIZE, floor=True)
 
-        self._tile_position = Vertex2f(
-            self._position.x // TILE_SIZE, self._position.y // TILE_SIZE
-        )
+        self._position = new_position
+        self._tile_position = new_tile_position
+
+    def collides(self, entity: "Entity") -> bool:
+        return self.rectangle.collides(entity.rectangle)
 
     @property
     def tile_position(self) -> Vertex2f:
@@ -60,3 +80,7 @@ class Entity(ABC):
     @property
     def position(self) -> Vertex2f:
         return self._position.clone()
+
+    @property
+    def rectangle(self) -> Rectangle:
+        return Rectangle(self.position, Vertex2f(self.width, self.height))
