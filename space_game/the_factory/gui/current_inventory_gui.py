@@ -11,12 +11,10 @@ from the_factory.game_context import GameContext
 
 
 class Button(GraphicComponent, ABC):
-    position: Vertex2f
     bounds: Vertex2f
 
-    def __init__(self, position: Vertex2f, bounds: Vertex2f) -> None:
-        super().__init__()
-        self.position = position
+    def __init__(self, position: Vertex2f, bounds: Vertex2f, z_index: int = 0) -> None:
+        super().__init__(position, z_index)
         self.bounds = bounds
 
     def render(self, renderer: Renderer) -> None:
@@ -52,9 +50,8 @@ class InventoryButton(Button):
 class CurrentInventoryGui(GraphicComponent):
     buttons: List[Button] = []
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.set_z_index(100)
+    def __init__(self, position: Vertex2f = Vertex2f(0, 0), z_index: int = 0) -> None:
+        super().__init__(position, z_index)
         self.buttons.append(InventoryButton(Vertex2f(20, 20), Vertex2f(50, 50), Belt))
         self.buttons.append(
             InventoryButton(Vertex2f(90, 20), Vertex2f(50, 50), Transformator)

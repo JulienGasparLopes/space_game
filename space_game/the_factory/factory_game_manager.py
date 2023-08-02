@@ -14,8 +14,8 @@ class FactoryGameManager(GameManager):
 
     def __init__(self) -> None:
         super().__init__()
-        self.graphic_manager.add_component(CurrentInventoryGui())
-        self.graphic_manager.add_component(GameInfoGui())
+        self.graphic_manager.add_component(CurrentInventoryGui(Vertex2f(0, 0), 500))
+        self.graphic_manager.add_component(GameInfoGui(Vertex2f(850, 20), 1000))
 
         map = Map(40, 25)
         for x in range(map.width):
@@ -37,8 +37,8 @@ class FactoryGameManager(GameManager):
             offset = offset.translated(Vertex2f(-ratio, 0))
         self._camera_direction = offset
 
-        self.current_map.set_offset(
-            self.current_map.offset.translated(self._camera_direction)
+        self.current_map.set_position(
+            self.current_map.position.translated(self._camera_direction)
         )
 
     def on_mouse_click(self, position: Vertex2f) -> None:

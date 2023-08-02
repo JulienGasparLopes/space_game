@@ -77,6 +77,8 @@ class Map(BaseMap):
             create_belt(Direction.SOUTH, Vertex2f(19, i))
 
     def render(self, renderer: RendererTk) -> None:
+        if renderer.mouse._drag_origin:
+            print("coucou")
         if selected_entity := GameContext.get().selected_entity:
             last_z_index = renderer.z_index
             selected_entity.set_position(

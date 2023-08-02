@@ -56,12 +56,13 @@ class RendererTk(Renderer):
             self.window, width=900, height=600, highlightthickness=0
         )
         self.canvas.pack(fill="both", expand=True)
-        self.canvas.bind("<ButtonRelease-1>", self.__handle_mouse_click)
+        self.canvas.bind("<ButtonRelease-1>", self.__handle_mouse_release)
         self._keyboard = Keyboard()
         self._mouse = Mouse()
         self.window.bind("<KeyPress>", self._keyboard._key_press)
         self.window.bind("<KeyRelease>", self._keyboard._key_release)
         self.window.bind("<Motion>", self._mouse._mouse_move)
+        self.window.bind("<B1-Motion>", self._mouse._mouse_drag_move)
 
     def set_background_color(self, color: Vertex3f) -> None:
         self.window.configure(bg=v3f_to_hex(color))
@@ -131,7 +132,8 @@ class RendererTk(Renderer):
     def mouse(self) -> Mouse:
         return self._mouse
 
-    def __handle_mouse_click(self, event) -> object:  # type: ignore[no-untyped-def]
+    def __handle_mouse_release(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_release(event)
         if not self._handle_mouse_click:
             raise Exception("Mouse click callback is not bound")
         else:

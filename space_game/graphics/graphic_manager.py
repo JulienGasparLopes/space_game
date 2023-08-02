@@ -22,13 +22,13 @@ class GraphicManager:
         self._renderer.render_start()
         for component in self._components:
             self._renderer.set_z_index(component.z_index)
-            self._renderer.set_offset(component.offset)
+            self._renderer.set_offset(component.position)
             component.render(self._renderer)
         self._renderer.render_end()
 
     def on_mouse_click(self, position: Vertex2f) -> None:
         for component in self._components:
-            click_position = position.translated(component.offset.inverted())
+            click_position = position.translated(component.position.inverted())
             was_clicked = component.on_mouse_click(click_position)
             if was_clicked:
                 return
