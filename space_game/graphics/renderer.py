@@ -30,6 +30,10 @@ class Renderer(ABC):
     ) -> None:
         ...
 
+    @abstractmethod
+    def draw_text(self, p: Vertex2f, text: str, z_index: int = 0) -> None:
+        ...
+
     @property
     def z_index(self) -> int:
         return self._current_z_index

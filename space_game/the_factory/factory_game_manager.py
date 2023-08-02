@@ -1,9 +1,10 @@
 from game_logic.game_manager import GameManager
-from graphics.renderer_tk import RendererTk
+from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
 from the_factory.factory_map import Map
 from the_factory.factory_tile import GROUND
 from the_factory.gui.current_inventory_gui import CurrentInventoryGui
+from the_factory.gui.game_info_gui import GameInfoGui
 
 
 class FactoryGameManager(GameManager):
@@ -14,6 +15,7 @@ class FactoryGameManager(GameManager):
     def __init__(self) -> None:
         super().__init__()
         self.graphic_manager.add_component(CurrentInventoryGui())
+        self.graphic_manager.add_component(GameInfoGui())
 
         map = Map(40, 25)
         for x in range(map.width):

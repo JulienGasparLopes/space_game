@@ -5,15 +5,18 @@ from graphics.renderer import Renderer, Image as BaseImage
 import tkinter as tk
 from PIL import Image as PilImage, ImageTk
 from tkinter import Canvas
+from graphics.renderer_tk.helpers import v3f_to_hex
+from graphics.renderer_tk.render_info import (
+    RenderInfo,
+    RenderInfoLine,
+    RenderInfoRect,
+    RenderInfoText,
+)
 
 from maths.vertex import Vertex2f, Vertex3f
 from typing import Callable, List
 
 from space_game.game_logic.tile import TILE_SIZE
-
-
-def _v3f_to_hex(color: Vertex3f) -> str:
-    return "#{:02x}{:02x}{:02x}".format(color.x, color.y, color.z)
 
 
 class Image(BaseImage):
@@ -31,15 +34,6 @@ class Image(BaseImage):
         canvas.create_image(position.x, position.y, image=self.image, anchor="nw")
 
 
-@dataclass
-class _RenderInfo:
-    p1: Vertex2f
-    p2: Vertex2f
-    content: Image | Vertex2f
-    z_index: int
-    is_line: bool
-
-
 MouseClickCallback = Callable[[Vertex2f], None]
 KeyPressedCallback = Callable[[str, bool], None]
 KeyRealseCallback = Callable[[str], None]
@@ -52,7 +46,7 @@ class RendererTk(Renderer):
     _keyboard: Keyboard
     _mouse: Mouse
 
-    _render_info_list: List[_RenderInfo] = []
+    _render_info_list: List[RenderInfo] = []
 
     FPS = 50
 
@@ -62,7 +56,7 @@ class RendererTk(Renderer):
             self.window, width=900, height=600, highlightthickness=0
         )
         self.canvas.pack(fill="both", expand=True)
-        self.canvas.bind("<Button-1>", self.__handle_mouse_click)
+        self.canvas.bind("<ButtonRelease-1>", self.__handle_mouse_click)
         self._keyboard = Keyboard()
         self._mouse = Mouse()
         self.window.bind("<KeyPress>", self._keyboard._key_press)
@@ -70,7 +64,7 @@ class RendererTk(Renderer):
         self.window.bind("<Motion>", self._mouse._mouse_move)
 
     def set_background_color(self, color: Vertex3f) -> None:
-        self.window.configure(bg=_v3f_to_hex(color))
+        self.window.configure(bg=v3f_to_hex(color))
 
     def set_button_click_callback(self, callback: MouseClickCallback) -> None:
         self._handle_mouse_click = callback
@@ -87,30 +81,7 @@ class RendererTk(Renderer):
     def render_end(self) -> None:
         self._render_info_list.sort(key=lambda ri: ri.z_index)
         for ri in self._render_info_list:
-            if ri.is_line:
-                self.canvas.create_line(
-                    ri.p1.x,
-                    ri.p1.y,
-                    ri.p2.x,
-                    ri.p2.y,
-                    fill=_v3f_to_hex(ri.content),
-                    width=2,
-                )
-            else:
-                if type(ri.content) == Vertex3f:
-                    points = [
-                        ri.p1.x,
-                        ri.p1.y,
-                        ri.p1.x,
-                        ri.p2.y,
-                        ri.p2.x,
-                        ri.p2.y,
-                        ri.p2.x,
-                        ri.p1.y,
-                    ]
-                    self.canvas.create_polygon(points, fill=_v3f_to_hex(ri.content))
-                else:
-                    ri.content.render(self.canvas, ri.p1)
+            ri.render(self.canvas)
 
     def draw_line(
         self, p1: Vertex2f, p2: Vertex2f, content: Vertex3f, z_index: int = 0
@@ -118,7 +89,7 @@ class RendererTk(Renderer):
         p1_t = p1.translated(self.offset)
         p2_t = p2.translated(self.offset)
         self._render_info_list.append(
-            _RenderInfo(p1_t, p2_t, content, self.z_index + z_index, True)
+            RenderInfoLine(p1_t, p2_t, content, self.z_index + z_index)
         )
 
     def draw_rect(
@@ -127,7 +98,15 @@ class RendererTk(Renderer):
         p1_t = p1.translated(self.offset)
         p2_t = p2.translated(self.offset)
         self._render_info_list.append(
-            _RenderInfo(p1_t, p2_t, content, self.z_index + z_index, False)
+            RenderInfoRect(p1_t, p2_t, content, self.z_index + z_index)
+        )
+
+    def draw_text(
+        self, p: Vertex2f, text: str, color: Vertex3f, z_index: int = 0
+    ) -> None:
+        p_t = p.translated(self.offset)
+        self._render_info_list.append(
+            RenderInfoText(p_t, p_t, text, color, self.z_index + z_index)
         )
 
     def _internal_loop(self) -> None:
@@ -156,5 +135,6 @@ class RendererTk(Renderer):
         if not self._handle_mouse_click:
             raise Exception("Mouse click callback is not bound")
         else:
+            print(Vertex2f(event.x, event.y))
             self._handle_mouse_click(Vertex2f(event.x, event.y))
         return {}

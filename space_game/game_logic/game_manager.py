@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from graphics.graphic_manager import GraphicManager
-from graphics.renderer_tk import RendererTk
+from graphics.renderer_tk.renderer_tk import RendererTk
 from graphics.renderer import Renderer
 from maths.colors import WHITE
 from game_logic.map import Map

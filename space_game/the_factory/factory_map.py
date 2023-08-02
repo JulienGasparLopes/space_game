@@ -1,6 +1,6 @@
 from typing import cast
 from game_logic.map import Map as BaseMap
-from graphics.renderer_tk import RendererTk
+from graphics.renderer_tk.renderer_tk import RendererTk
 from the_factory.entities.belt import Belt, Direction
 from the_factory.entities.factory import (
     MaterialChute,
