@@ -25,9 +25,9 @@ Focused on factory management/optimisation with money, energy, production defaul
 - Belt and Material transportation - OK
 - Factory processing + input/output - OK
 - Entity collisions (overlapping) - OK
-- Money system - WIP
-- Menu abstraction + Editor - WIP
-- Editor - WIP
+- Menu abstraction + Editor - OK
+- Editor (+ multi-placement) -- OK - Object deletion WIP
+- Money system - Next
 - Material configuration and Crafting recipes - Next
 
 ## Others game relative subjects:
