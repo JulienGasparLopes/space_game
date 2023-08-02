@@ -41,3 +41,6 @@ class Entity(BaseEntity, ABC):
     ) -> None:
         super().__init__(content, width, height)
         self._direction = Direction.NORTH
+
+    def set_direction(self, direction: Direction) -> None:
+        self._direction = direction

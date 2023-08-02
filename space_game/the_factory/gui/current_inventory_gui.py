@@ -1,50 +1,34 @@
-from abc import ABC, abstractmethod
 from typing import List
-from game_logic.entity import Entity
+from graphics.button import Button
 from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
-from maths.colors import RED
 from maths.vertex import Vertex2f
+from the_factory.context.build_object_info import BuildObjectInfo
+from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
-from the_factory.entities.factory import Transformator
-from the_factory.game_context import GameContext
-
-
-class Button(GraphicComponent, ABC):
-    bounds: Vertex2f
-
-    def __init__(self, position: Vertex2f, bounds: Vertex2f, z_index: int = 0) -> None:
-        super().__init__(position, z_index)
-        self.bounds = bounds
-
-    def render(self, renderer: Renderer) -> None:
-        renderer.draw_rect(self.position, self.position.translated(self.bounds), RED)
-
-    def on_mouse_click(self, position: Vertex2f) -> bool:
-        if (
-            self.position.x <= position.x <= self.position.x + self.bounds.x
-            and self.position.y <= position.y <= self.position.y + self.bounds.y
-        ):
-            self.action()
-            return True
-        return False
-
-    @abstractmethod
-    def action(self) -> None:
-        ...
+from the_factory.entities.factory import Fabricator, Transformator
 
 
 class InventoryButton(Button):
-    entity_type: type[Entity]
+    _build_object_info: BuildObjectInfo
 
     def __init__(
-        self, position: Vertex2f, bounds: Vertex2f, entity_type: type[Entity]
+        self, position: Vertex2f, bounds: Vertex2f, build_object_info: BuildObjectInfo
     ) -> None:
         super().__init__(position, bounds)
-        self.entity_type = entity_type
+        self._build_object_info = build_object_info
+
+    @property
+    def build_object_info(self) -> BuildObjectInfo:
+        return self._build_object_info
 
     def action(self) -> None:
-        GameContext.get().set_select_entity(self.entity_type())
+        GameContext.get().set_build_info(self._build_object_info)
+
+
+BELT_BUILD_INFO = BuildObjectInfo(Belt, mono_build=False)
+TRANSFORMATOR_BUILD_INFO = BuildObjectInfo(Transformator)
+FABRICATOR_BUILD_INFO = BuildObjectInfo(Fabricator)
 
 
 class CurrentInventoryGui(GraphicComponent):
@@ -52,10 +36,18 @@ class CurrentInventoryGui(GraphicComponent):
 
     def __init__(self, position: Vertex2f = Vertex2f(0, 0), z_index: int = 0) -> None:
         super().__init__(position, z_index)
-        self.buttons.append(InventoryButton(Vertex2f(20, 20), Vertex2f(50, 50), Belt))
-        self.buttons.append(
-            InventoryButton(Vertex2f(90, 20), Vertex2f(50, 50), Transformator)
-        )
+        button_size = Vertex2f(50, 50)
+        gap_size = 20
+        x = 20
+        for build_info in [
+            BELT_BUILD_INFO,
+            TRANSFORMATOR_BUILD_INFO,
+            FABRICATOR_BUILD_INFO,
+        ]:
+            self.buttons.append(
+                InventoryButton(Vertex2f(x, 20), button_size, build_info)
+            )
+            x += button_size.x + gap_size
 
     def render(self, renderer: Renderer) -> None:
         for button in self.buttons:

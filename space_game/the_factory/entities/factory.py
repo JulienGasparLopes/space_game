@@ -8,10 +8,10 @@ from maths.colors import BLUE, ORANGE, YELLOW
 from space_game.the_factory.entities.belt import Belt
 from the_factory.entities.entity import Direction, Entity
 from the_factory.entities.material import Material
-from the_factory.game_context import GameContext
+from the_factory.context.game_context import GameContext
 
 if TYPE_CHECKING:
-    from the_factory.factory_map import Map
+    from the_factory.maps.map import Map
 
 
 class IOFactory(Entity, ABC):

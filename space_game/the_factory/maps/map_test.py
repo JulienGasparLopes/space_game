@@ -1,18 +1,16 @@
-from typing import cast
-from game_logic.map import Map as BaseMap
-from graphics.renderer_tk.renderer_tk import RendererTk
-from the_factory.entities.belt import Belt, Direction
+from maths.vertex import Vertex2f
+from the_factory.entities.belt import Belt
+from the_factory.entities.entity import Direction
 from the_factory.entities.factory import (
+    Fabricator,
     MaterialChute,
     MaterialSeller,
     Transformator,
-    Fabricator,
 )
-from maths.vertex import Vertex2f
-from the_factory.game_context import GameContext
+from the_factory.maps.map import Map
 
 
-class Map(BaseMap):
+class MapTest(Map):
     def __init__(self, width: int, height: int) -> None:
         super().__init__(width, height)
 
@@ -23,6 +21,14 @@ class Map(BaseMap):
         chute2 = MaterialChute(400)
         chute2.set_tile_position(Vertex2f(1, 9))
         self.entities.append(chute2)
+
+        chute3 = MaterialChute(250)
+        chute3.set_tile_position(Vertex2f(1, 12))
+        self.entities.append(chute3)
+
+        chute4 = MaterialChute(350)
+        chute4.set_tile_position(Vertex2f(1, 15))
+        self.entities.append(chute4)
 
         seller1 = MaterialSeller(300, Direction.WEST)
         seller1.set_tile_position(Vertex2f(20, 12))
@@ -41,7 +47,7 @@ class Map(BaseMap):
         self.entities.append(fab1)
 
         def create_belt(direction: Direction, position: Vertex2f) -> None:
-            belt = Belt(direction, 60 * 5)
+            belt = Belt(direction)
             belt.set_tile_position(position)
             self.entities.append(belt)
 
@@ -75,41 +81,3 @@ class Map(BaseMap):
         # fab1 to seller1
         for i in range(6, 13):
             create_belt(Direction.SOUTH, Vertex2f(19, i))
-
-    def render(self, renderer: RendererTk) -> None:
-        if renderer.mouse._drag_origin:
-            print("coucou")
-        if selected_entity := GameContext.get().selected_entity:
-            last_z_index = renderer.z_index
-            selected_entity.set_position(
-                renderer.mouse.get_relative_position(self),
-                is_center_position=True,
-                bound_to_tile=True,
-            )
-            renderer.set_z_index(last_z_index + 10)
-            selected_entity.render(renderer)
-            renderer.set_z_index(last_z_index)
-        return super().render(renderer)
-
-    def get_belt_at_tile_position(self, tile_position: Vertex2f) -> Belt | None:
-        possible_targets = [
-            e for e in self.get_entities_at_tile(tile_position) if type(e) == Belt
-        ]
-        if len(possible_targets) == 1:
-            return cast(Belt, possible_targets[0])
-        return None
-
-    def on_mouse_click(self, position: Vertex2f) -> bool:
-        game_context = GameContext.get()
-        if selected_entity := game_context.selected_entity:
-            collides = any(
-                [
-                    e.collides(selected_entity, strict=False)
-                    for e in self.entities
-                    if e != selected_entity
-                ]
-            )
-            if not collides:
-                self.entities.append(selected_entity)
-                game_context.set_select_entity()
-        return False

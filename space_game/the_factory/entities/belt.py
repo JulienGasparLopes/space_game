@@ -1,14 +1,13 @@
 from typing import TYPE_CHECKING
-from game_logic.entity import Entity
 from game_logic.tile import TILE_SIZE
 from graphics.renderer_tk.renderer_tk import Image
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
-from the_factory.entities.entity import Direction
+from the_factory.entities.entity import Direction, Entity
 from the_factory.entities.material import Material
 
 if TYPE_CHECKING:
-    from the_factory.factory_map import Map
+    from the_factory.maps.map import Map
 
 BELT_IMAGE_PATH = "space_game/the_factory/entities/images/belt.png"
 
@@ -33,7 +32,7 @@ class Belt(Entity):
     _intput_direction_origin: Direction | None
 
     def __init__(
-        self, direction: Direction = Direction.NORTH, material_per_minute: int = 60
+        self, direction: Direction = Direction.NORTH, material_per_minute: int = 300
     ) -> None:
         super().__init__(DIRECTION_TO_IMAGE.get(direction))
         self._direction = direction
@@ -137,3 +136,7 @@ class Belt(Entity):
             offset = -TILE_SIZE // 2
             pos = center.translated(self._direction.opposite.vertex.multiplied(offset))
             self._material_on_output.set_position(pos, is_center_position=True)
+
+    def set_direction(self, direction: Direction) -> None:
+        super().set_direction(direction)
+        self.content = DIRECTION_TO_IMAGE.get(direction)

@@ -1,10 +1,10 @@
 from game_logic.game_manager import GameManager
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
-from the_factory.factory_map import Map
 from the_factory.factory_tile import GROUND
 from the_factory.gui.current_inventory_gui import CurrentInventoryGui
 from the_factory.gui.game_info_gui import GameInfoGui
+from the_factory.maps.map_test import MapTest
 
 
 class FactoryGameManager(GameManager):
@@ -17,7 +17,7 @@ class FactoryGameManager(GameManager):
         self.graphic_manager.add_component(CurrentInventoryGui(Vertex2f(0, 0), 500))
         self.graphic_manager.add_component(GameInfoGui(Vertex2f(850, 20), 1000))
 
-        map = Map(40, 25)
+        map = MapTest(40, 25)
         for x in range(map.width):
             for y in range(map.height):
                 map.terrain[x][y] = GROUND

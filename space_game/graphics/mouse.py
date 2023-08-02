@@ -14,7 +14,8 @@ class Mouse:
         self._position = Vertex2f(event.x, event.y)
 
     def _mouse_drag_move(self, event) -> None:  # type: ignore[no-untyped-def]
-        if not self._drag_origin:
+        self._position = Vertex2f(event.x, event.y)
+        if self._drag_origin is None:
             self._drag_origin = Vertex2f(event.x, event.y)
 
     def _mouse_release(self, event) -> None:  # type: ignore[no-untyped-def]
@@ -34,3 +35,8 @@ class Mouse:
 
     def get_relative_position(self, component: GraphicComponent) -> Vertex2f:
         return self._position.translated(component.position.multiplied(-1))
+
+    def get_relative_drag_origin(self, component: GraphicComponent) -> Vertex2f | None:
+        if not self._drag_origin:
+            return None
+        return self._drag_origin.translated(component.position.multiplied(-1))

@@ -2,7 +2,7 @@ from graphics.graphic_component import GraphicComponent
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.colors import BLACK
 from maths.vertex import Vertex2f
-from the_factory.game_context import GameContext
+from the_factory.context.game_context import GameContext
 
 
 class GameInfoGui(GraphicComponent):
