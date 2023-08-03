@@ -26,9 +26,12 @@ Focused on factory management/optimisation with money, energy, production defaul
 - Factory processing + input/output - OK
 - Entity collisions (overlapping) - OK
 - Menu abstraction + Editor - OK
-- Editor (+ multi-placement) -- OK - Object deletion WIP
-- Money system - Next
+- Editor (+ multi-placement + deletion) - OK
 - Material configuration and Crafting recipes - Next
+- Money system - Next
+- Factory occupation % (idle, runing, blocked) - Todo
+
+- Front/Back total division - Todo
 
 ## Others game relative subjects:
 
