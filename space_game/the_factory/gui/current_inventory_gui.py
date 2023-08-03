@@ -1,4 +1,5 @@
 from typing import List
+from game_logic.entity import Entity
 from graphics.button import Button
 from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
@@ -6,7 +7,6 @@ from maths.vertex import Vertex2f
 from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
 from the_factory.entities.delete_plot import DeletePlot
-from the_factory.entities.entity import Entity
 from the_factory.entities.factory import Fabricator, Transformator
 
 

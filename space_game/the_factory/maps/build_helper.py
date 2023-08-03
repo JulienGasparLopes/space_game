@@ -3,7 +3,7 @@ from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
 from the_factory.entities.belt import Belt
 from the_factory.entities.delete_plot import DeletePlot
-from the_factory.entities.entity import Direction, Entity
+from game_logic.entity import Direction, Entity
 from the_factory.context.game_context import GameContext
 from typing import TYPE_CHECKING
 
@@ -37,6 +37,9 @@ class BuildHelper:
         build_entity_type = GameContext.get().selected_build_entity_type
         if not build_entity_type:
             return
+        current_direction = (
+            self._build_ghosts[0].direction if self._build_ghosts else Direction.NORTH
+        )
         self._build_ghosts = []
 
         current_pos = renderer.mouse.get_relative_position(self._map)
@@ -74,6 +77,9 @@ class BuildHelper:
             self._build_ghosts[0].set_position(
                 current_pos, is_center_position=True, bound_to_tile=True
             )
+            self._build_ghosts[0].set_direction(current_direction)
+            if renderer.keyboard.consume_key("r"):
+                self._build_ghosts[0].rotate()
 
     def render(self, renderer: RendererTk) -> None:
         self.update_ghosts(renderer)

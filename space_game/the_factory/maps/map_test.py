@@ -1,6 +1,6 @@
 from maths.vertex import Vertex2f
 from the_factory.entities.belt import Belt
-from the_factory.entities.entity import Direction
+from game_logic.entity import Direction
 from the_factory.entities.factory import (
     Fabricator,
     MaterialChute,

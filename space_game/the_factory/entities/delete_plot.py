@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
+from game_logic.entity import Entity
 from maths.colors import RED
-from the_factory.entities.entity import Entity
 
 if TYPE_CHECKING:
     from the_factory.maps.map import Map

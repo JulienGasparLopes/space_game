@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
+from game_logic.entity import Direction, Entity
 from game_logic.tile import TILE_SIZE
 from graphics.renderer_tk.renderer_tk import Image
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
-from the_factory.entities.entity import Direction, Entity
 from the_factory.entities.material import Material
 
 if TYPE_CHECKING:

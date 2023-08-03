@@ -1,4 +1,4 @@
-from the_factory.entities.entity import Entity
+from game_logic.entity import Entity
 
 
 class GameContext:

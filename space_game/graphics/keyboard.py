@@ -12,3 +12,8 @@ class Keyboard:
 
     def is_pressed(self, key: str) -> bool:
         return self._key_pressed.get(key, False)
+
+    def consume_key(self, key: str) -> bool:
+        was_pressed = self.is_pressed(key)
+        self._key_pressed[key] = False
+        return was_pressed

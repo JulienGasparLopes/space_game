@@ -6,7 +6,7 @@ from graphics.renderer import Renderer
 from game_logic.tile import TILE_SIZE
 from maths.colors import BLUE, ORANGE, YELLOW
 from space_game.the_factory.entities.belt import Belt
-from the_factory.entities.entity import Direction, Entity
+from game_logic.entity import Direction, Entity
 from the_factory.entities.material import Material
 from the_factory.context.game_context import GameContext
 
