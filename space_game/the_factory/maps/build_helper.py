@@ -1,6 +1,7 @@
 from game_logic.tile import TILE_SIZE
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
+from the_factory.entities.delete_plot import DeletePlot
 from the_factory.entities.entity import Direction, Entity
 from the_factory.context.game_context import GameContext
 from typing import TYPE_CHECKING
@@ -67,16 +68,26 @@ class BuildHelper:
         renderer.set_z_index(last_z_index)
 
     def on_mouse_click(self, position: Vertex2f) -> bool:
-        for entity in self._build_ghosts:
-            collides = any(
-                [
-                    e.collides(entity, strict=False)
-                    for e in self._map.entities
-                    if e != entity
-                ]
-            )
-            if not collides:
-                self._map.entities.append(entity)
-                GameContext.get().set_build_info()
+        if len(self._build_ghosts) == 0:
+            return False
+
+        elif isinstance(self._build_ghosts[0], DeletePlot):
+            for entity in self._map.entities:
+                if entity.collides(self._build_ghosts[0], strict=False):
+                    self._map.entities.remove(entity)
+                    GameContext.get().set_build_info()
+        else:
+            for entity in self._build_ghosts:
+                collides = any(
+                    [
+                        e.collides(entity, strict=False)
+                        for e in self._map.entities
+                        if e != entity
+                    ]
+                )
+                if not collides:
+                    self._map.entities.append(entity)
+                    GameContext.get().set_build_info()
+
         self._build_ghosts = []
         return False

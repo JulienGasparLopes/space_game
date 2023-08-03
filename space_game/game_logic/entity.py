@@ -32,10 +32,6 @@ class Entity(ABC):
             z_index,
         )
 
-    @abstractmethod
-    def update(self, delta_ms: int, map: "Map") -> None:
-        ...
-
     def set_tile_position(self, position: Vertex2f) -> None:
         self._tile_position = position.clone()
         self._position = position.multiplied(TILE_SIZE)
@@ -84,3 +80,7 @@ class Entity(ABC):
     @property
     def rectangle(self) -> Rectangle:
         return Rectangle(self.position, Vertex2f(self.width, self.height))
+
+    @abstractmethod
+    def update(self, delta_ms: int, map: "Map") -> None:
+        ...

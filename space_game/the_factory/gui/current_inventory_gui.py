@@ -6,6 +6,7 @@ from maths.vertex import Vertex2f
 from the_factory.context.build_object_info import BuildObjectInfo
 from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
+from the_factory.entities.delete_plot import DeletePlot
 from the_factory.entities.factory import Fabricator, Transformator
 
 
@@ -29,6 +30,7 @@ class InventoryButton(Button):
 BELT_BUILD_INFO = BuildObjectInfo(Belt, mono_build=False)
 TRANSFORMATOR_BUILD_INFO = BuildObjectInfo(Transformator)
 FABRICATOR_BUILD_INFO = BuildObjectInfo(Fabricator)
+DELETE_PLOT_BUILD_INFO = BuildObjectInfo(DeletePlot)
 
 
 class CurrentInventoryGui(GraphicComponent):
@@ -43,6 +45,7 @@ class CurrentInventoryGui(GraphicComponent):
             BELT_BUILD_INFO,
             TRANSFORMATOR_BUILD_INFO,
             FABRICATOR_BUILD_INFO,
+            DELETE_PLOT_BUILD_INFO,
         ]:
             self.buttons.append(
                 InventoryButton(Vertex2f(x, 20), button_size, build_info)
