@@ -3,34 +3,24 @@ from graphics.button import Button
 from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
-from the_factory.context.build_object_info import BuildObjectInfo
 from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
 from the_factory.entities.delete_plot import DeletePlot
+from the_factory.entities.entity import Entity
 from the_factory.entities.factory import Fabricator, Transformator
 
 
 class InventoryButton(Button):
-    _build_object_info: BuildObjectInfo
+    _entity_type: type[Entity]
 
     def __init__(
-        self, position: Vertex2f, bounds: Vertex2f, build_object_info: BuildObjectInfo
+        self, position: Vertex2f, bounds: Vertex2f, entity_type: type[Entity]
     ) -> None:
         super().__init__(position, bounds)
-        self._build_object_info = build_object_info
-
-    @property
-    def build_object_info(self) -> BuildObjectInfo:
-        return self._build_object_info
+        self._entity_type = entity_type
 
     def action(self) -> None:
-        GameContext.get().set_build_info(self._build_object_info)
-
-
-BELT_BUILD_INFO = BuildObjectInfo(Belt, mono_build=False)
-TRANSFORMATOR_BUILD_INFO = BuildObjectInfo(Transformator)
-FABRICATOR_BUILD_INFO = BuildObjectInfo(Fabricator)
-DELETE_PLOT_BUILD_INFO = BuildObjectInfo(DeletePlot)
+        GameContext.get().select_build_entity_type(self._entity_type)
 
 
 class CurrentInventoryGui(GraphicComponent):
@@ -41,14 +31,9 @@ class CurrentInventoryGui(GraphicComponent):
         button_size = Vertex2f(50, 50)
         gap_size = 20
         x = 20
-        for build_info in [
-            BELT_BUILD_INFO,
-            TRANSFORMATOR_BUILD_INFO,
-            FABRICATOR_BUILD_INFO,
-            DELETE_PLOT_BUILD_INFO,
-        ]:
+        for entity_type in [Belt, Transformator, Fabricator, DeletePlot]:
             self.buttons.append(
-                InventoryButton(Vertex2f(x, 20), button_size, build_info)
+                InventoryButton(Vertex2f(x, 20), button_size, entity_type)
             )
             x += button_size.x + gap_size
 

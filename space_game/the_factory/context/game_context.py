@@ -1,9 +1,9 @@
-from the_factory.context.build_object_info import BuildObjectInfo
+from the_factory.entities.entity import Entity
 
 
 class GameContext:
     _money: int
-    _build_info: BuildObjectInfo | None = None
+    _selected_build_entity_type: type[Entity] | None = None
 
     def __init__(self) -> None:
         self._money = 1050
@@ -25,16 +25,18 @@ class GameContext:
                 return True
         return False
 
-    def set_build_info(self, build_info: BuildObjectInfo | None = None) -> None:
-        self._build_info = build_info
+    def select_build_entity_type(
+        self, build_entity_type: type[Entity] | None = None
+    ) -> None:
+        self._selected_build_entity_type = build_entity_type
 
     @property
     def money(self) -> int:
         return self._money
 
     @property
-    def build_info(self) -> BuildObjectInfo | None:
-        return self._build_info
+    def selected_build_entity_type(self) -> type[Entity] | None:
+        return self._selected_build_entity_type
 
 
 _GAME_CONTEXT: GameContext | None = None
