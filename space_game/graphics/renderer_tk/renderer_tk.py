@@ -137,6 +137,5 @@ class RendererTk(Renderer):
         if not self._handle_mouse_click:
             raise Exception("Mouse click callback is not bound")
         else:
-            print(Vertex2f(event.x, event.y))
             self._handle_mouse_click(Vertex2f(event.x, event.y))
         return {}
