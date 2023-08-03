@@ -3,6 +3,7 @@ from game_logic.entity import Entity
 from graphics.button import Button
 from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
+from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
 from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
@@ -40,6 +41,12 @@ class CurrentInventoryGui(GraphicComponent):
     def render(self, renderer: Renderer) -> None:
         for button in self.buttons:
             button.render(renderer)
+        self.listen_keys(renderer)
+
+    def listen_keys(self, renderer: RendererTk) -> None:
+        for key in ["1", "2", "3", "4"]:
+            if renderer.keyboard.consume_key(key):
+                self.buttons[int(key) - 1].action()
 
     def on_mouse_click(self, position: Vertex2f) -> bool:
         for button in self.buttons:
