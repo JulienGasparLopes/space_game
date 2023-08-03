@@ -112,7 +112,7 @@ class Entity(ABC):
         self._direction = direction
 
     def rotate(self, clockwise: bool = True) -> None:
-        self.set_direction(self.direction.get_next_direction(clockwise))
+        self._direction = self.direction.get_next_direction(clockwise)
 
     def collides(self, entity: "Entity", strict: bool = True) -> bool:
         return self.rectangle.collides(entity.rectangle, strict)

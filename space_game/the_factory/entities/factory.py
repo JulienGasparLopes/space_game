@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import TYPE_CHECKING
 from maths.colors import GREEN, PURPLE
+from maths.matrix import Matrix
 from maths.vertex import Vertex2f, Vertex3f
 from graphics.renderer import Renderer
 from game_logic.tile import TILE_SIZE
@@ -15,33 +16,68 @@ if TYPE_CHECKING:
 
 
 class IOFactory(Entity, ABC):
-    factory: "Factory"
-
     _buffer: list[Material]
-    _position_offset: Vertex2f
+
+    _factory_position: Vertex2f = Vertex2f(0, 0)
+    _factory_position_offset: Vertex2f
+    _target_belt_position: Vertex2f = Vertex2f(0, 0)
 
     def __init__(
-        self, factory: "Factory", color: Vertex3f, position_offset: Vertex2f
+        self,
+        color: Vertex3f,
+        factory_tile_position_offset: Vertex2f,
+        direction: Direction,
     ) -> None:
         super().__init__(color, 4, 4)
-        self.factory = factory
         self._buffer = []
-        self._position_offset = position_offset.multiplied(TILE_SIZE)
+        self.set_direction(direction)
+        self._factory_position_offset = factory_tile_position_offset
 
     def render(self, renderer: Renderer) -> None:
         renderer.draw_rect(
-            Vertex2f(self.position.x - 4, self.position.y - 4),
-            Vertex2f(self.position.x + 4, self.position.y + 4),
+            Vertex2f(
+                self._target_belt_position.x - 4, self._target_belt_position.y - 4
+            ),
+            Vertex2f(
+                self._target_belt_position.x + 4, self._target_belt_position.y + 4
+            ),
             self.content,
             z_index=2,
         )
 
-    def update_position(self) -> None:
+    def update_position(self, factory_position: Vertex2f) -> None:
+        self._factory_position = factory_position
         self.set_position(
-            self.factory.position.translated(self._position_offset).translated(
-                Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2)
+            factory_position.translated(
+                self._factory_position_offset.multiplied(TILE_SIZE)
             )
         )
+        self._target_belt_position = self.position.translated(
+            self.direction.vertex.multiplied(TILE_SIZE)
+        ).translated(Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2))
+
+    def update_factory_tile_position_offset(
+        self, factory_tile_position_offset: Vertex2f
+    ) -> None:
+        self._factory_position_offset = factory_tile_position_offset
+        self.set_position(
+            self._factory_position.translated(
+                self._factory_position_offset.multiplied(TILE_SIZE)
+            )
+        )
+        self._target_belt_position = self.position.translated(
+            self.direction.vertex.multiplied(TILE_SIZE)
+        ).translated(Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2))
+
+    def rotate(self, clockwise: bool = True) -> None:
+        super().rotate(clockwise)
+        self._target_belt_position = self.position.translated(
+            self.direction.vertex.multiplied(TILE_SIZE)
+        ).translated(Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2))
+
+    @property
+    def target_belt_tile_position(self) -> Vertex2f:
+        return self._target_belt_position.divided(TILE_SIZE, floor=True)
 
     @abstractproperty
     def is_available(self) -> bool:
@@ -49,12 +85,14 @@ class IOFactory(Entity, ABC):
 
 
 class FactoryInput(IOFactory):
-    def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
-        super().__init__(factory, BLUE, position_offset)
+    def __init__(self, position_offset: Vertex2f, direction: Direction) -> None:
+        super().__init__(BLUE, position_offset, direction)
 
     def update(self, delta_ms: int, map: "Map") -> None:
         if len(self._buffer) == 0:
-            target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
+            target_belt: Belt = map.get_belt_at_tile_position(
+                self.target_belt_tile_position
+            )
             if target_belt:
                 material = target_belt.get_material()
                 if material:
@@ -71,13 +109,15 @@ class FactoryInput(IOFactory):
 
 
 class FactoryOutput(IOFactory):
-    def __init__(self, factory: "Factory", position_offset: Vertex2f) -> None:
-        super().__init__(factory, ORANGE, position_offset)
+    def __init__(self, position_offset: Vertex2f, direction: Direction) -> None:
+        super().__init__(ORANGE, position_offset, direction)
 
     def update(self, delta_ms: int, map: "Map") -> None:
         if len(self._buffer) > 0:
             material = self._buffer[0]
-            target_belt: Belt = map.get_belt_at_tile_position(self.tile_position)
+            target_belt: Belt = map.get_belt_at_tile_position(
+                self.target_belt_tile_position
+            )
             if target_belt:
                 inserted = target_belt.insert_material(material)
                 if inserted:
@@ -98,6 +138,8 @@ class Factory(Entity, ABC):
     inputs: list[FactoryInput]
     outputs: list[FactoryOutput]
 
+    _io_mapping: Matrix[IOFactory]
+
     process_time_ms: int
     _process_counter: int
     _processing: bool
@@ -112,6 +154,13 @@ class Factory(Entity, ABC):
     ) -> None:
         self.inputs = inputs
         self.outputs = outputs
+
+        self._io_mapping = Matrix.from_size(width, height, initial_value=None)
+        for input in inputs:
+            self._io_mapping.set(input._factory_position_offset, input)
+        for output in outputs:
+            self._io_mapping.set(output._factory_position_offset, output)
+
         self.process_time_ms = process_time_ms
         self._process_counter = process_time_ms
         self._processing = False
@@ -146,7 +195,7 @@ class Factory(Entity, ABC):
         super().set_tile_position(position)
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
-            io.update_position()
+            io.update_position(self.position)
 
     def set_position(
         self,
@@ -157,7 +206,25 @@ class Factory(Entity, ABC):
         super().set_position(position, is_center_position, bound_to_tile)
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
-            io.update_position()
+            io.update_position(self.position)
+
+    def set_direction(self, direction: Direction) -> None:
+        rotation_number = {
+            Direction.NORTH: 0,
+            Direction.EAST: 1,
+            Direction.SOUTH: 2,
+            Direction.WEST: 3,
+        }.get(direction, 0)
+        for _ in range(rotation_number):
+            self.rotate()
+
+    def rotate(self, clockwise: bool = True) -> None:
+        super().rotate(clockwise)
+        self._io_mapping.rotate(clockwise)
+        for io, pos in self._io_mapping.get_entries():
+            if io:
+                io.update_factory_tile_position_offset(pos)
+                io.rotate(clockwise)
 
     def start_processing(self) -> None:
         self._processing = True
@@ -177,7 +244,7 @@ class Factory(Entity, ABC):
 
 class MaterialChute(Factory):
     def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
-        super().__init__(1, 1, [], [FactoryOutput(self, direction.vertex)], delay)
+        super().__init__(1, 1, [], [FactoryOutput(Vertex2f(0, 0), direction)], delay)
         self._direction = direction
 
     def process_done(self) -> bool:
@@ -192,7 +259,7 @@ class MaterialChute(Factory):
 
 class MaterialSeller(Factory):
     def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
-        super().__init__(1, 1, [FactoryInput(self, direction.vertex)], [], delay)
+        super().__init__(1, 1, [FactoryInput(Vertex2f(0, 0), direction)], [], delay)
         self._direction = direction
 
     def process_done(self) -> bool:
@@ -208,8 +275,8 @@ class MaterialSeller(Factory):
 
 class Transformator(Factory):
     def __init__(self) -> None:
-        inputs = [FactoryInput(self, Vertex2f(-1, 1))]
-        outputs = [FactoryOutput(self, Vertex2f(3, 1))]
+        inputs = [FactoryInput(Vertex2f(0, 1), direction=Direction.WEST)]
+        outputs = [FactoryOutput(Vertex2f(2, 1), direction=Direction.EAST)]
         super().__init__(3, 3, inputs, outputs)
 
     def update(self, delta_ms: int, map: "Map") -> None:
@@ -229,11 +296,11 @@ class Transformator(Factory):
 class Fabricator(Factory):
     def __init__(self) -> None:
         inputs = [
-            FactoryInput(self, Vertex2f(-1, 1)),
-            FactoryInput(self, Vertex2f(-1, 3)),
+            FactoryInput(Vertex2f(0, 1), direction=Direction.WEST),
+            FactoryInput(Vertex2f(0, 3), direction=Direction.WEST),
         ]
         outputs = [
-            FactoryOutput(self, Vertex2f(5, 2)),
+            FactoryOutput(Vertex2f(4, 2), direction=Direction.EAST),
         ]
         super().__init__(5, 5, inputs, outputs)
 
