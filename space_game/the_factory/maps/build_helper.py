@@ -1,4 +1,5 @@
 from game_logic.tile import TILE_SIZE
+from graphics.mouse import MouseButton
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
 from the_factory.entities.belt import Belt
@@ -35,12 +36,13 @@ class BuildHelper:
 
     def update_ghosts(self, renderer: RendererTk) -> None:
         build_entity_type = GameContext.get().selected_build_entity_type
-        if not build_entity_type:
-            return
         current_direction = (
             self._build_ghosts[0].direction if self._build_ghosts else Direction.NORTH
         )
         self._build_ghosts = []
+
+        if not build_entity_type:
+            return
 
         current_pos = renderer.mouse.get_relative_position(self._map)
         drag_origin = renderer.mouse.get_relative_drag_origin(self._map)
@@ -90,7 +92,7 @@ class BuildHelper:
             entity.render(renderer)
         renderer.set_z_index(last_z_index)
 
-    def on_mouse_click(self, position: Vertex2f) -> bool:
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
         if len(self._build_ghosts) == 0:
             return False
 

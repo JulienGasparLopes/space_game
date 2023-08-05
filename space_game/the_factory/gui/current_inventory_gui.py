@@ -2,6 +2,7 @@ from typing import List
 from game_logic.entity import Entity
 from graphics.button import Button
 from graphics.graphic_component import GraphicComponent
+from graphics.mouse import MouseButton
 from graphics.renderer import Renderer
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
@@ -48,9 +49,14 @@ class CurrentInventoryGui(GraphicComponent):
             if renderer.keyboard.consume_key(key):
                 self.buttons[int(key) - 1].action()
 
-    def on_mouse_click(self, position: Vertex2f) -> bool:
-        for button in self.buttons:
-            was_clicked = button.on_mouse_click(position)
-            if was_clicked:
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
+        if mouse_button != MouseButton.LEFT:
+            if GameContext.get().selected_build_entity_type:
+                GameContext.get().select_build_entity_type(None)
                 return True
+        else:
+            for button in self.buttons:
+                was_clicked = button.on_mouse_click(position, button)
+                if was_clicked:
+                    return True
         return False

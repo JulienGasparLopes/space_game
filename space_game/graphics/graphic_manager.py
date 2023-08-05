@@ -1,5 +1,6 @@
 from typing import List
 from graphics.graphic_component import GraphicComponent
+from graphics.mouse import MouseButton
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
 
@@ -26,9 +27,9 @@ class GraphicManager:
             component.render(self._renderer)
         self._renderer.render_end()
 
-    def on_mouse_click(self, position: Vertex2f) -> None:
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> None:
         for component in self._components:
             click_position = position.translated(component.position.inverted())
-            was_clicked = component.on_mouse_click(click_position)
+            was_clicked = component.on_mouse_click(click_position, mouse_button)
             if was_clicked:
                 return

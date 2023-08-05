@@ -1,6 +1,7 @@
 from abc import ABC
 from graphics.graphic_component import GraphicComponent
 from graphics.renderer import Renderer
+from maths.rectangle import Rectangle
 from maths.vertex import Vertex2f, Vertex3f
 from game_logic.tile import Tile, VOID, TILE_SIZE
 from game_logic.entity import Entity
@@ -68,6 +69,14 @@ class Map(GraphicComponent, ABC):
         ):
             return None
         return self.terrain[position.x][position.y]
+
+    def get_entities_at_position(self, position: Vertex2f) -> list[Entity]:
+        valid_entities = []
+        for entity in self.entities:
+            rect = Rectangle(entity.position, Vertex2f(entity.width, entity.height))
+            if rect.contains(position):
+                valid_entities.append(entity)
+        return valid_entities
 
     def get_entities_at_tile(self, tile_position: Vertex2f) -> list[Entity]:
         return [e for e in self.entities if e.tile_position == tile_position]

@@ -1,6 +1,5 @@
-from dataclasses import dataclass
 from graphics.keyboard import Keyboard
-from graphics.mouse import Mouse
+from graphics.mouse import Mouse, MouseButton
 from graphics.renderer import Renderer, Image as BaseImage
 import tkinter as tk
 from PIL import Image as PilImage, ImageTk
@@ -34,7 +33,7 @@ class Image(BaseImage):
         canvas.create_image(position.x, position.y, image=self.image, anchor="nw")
 
 
-MouseClickCallback = Callable[[Vertex2f], None]
+MouseClickCallback = Callable[[Vertex2f, MouseButton], None]
 KeyPressedCallback = Callable[[str, bool], None]
 KeyRealseCallback = Callable[[str], None]
 
@@ -56,13 +55,15 @@ class RendererTk(Renderer):
             self.window, width=900, height=600, highlightthickness=0
         )
         self.canvas.pack(fill="both", expand=True)
-        self.canvas.bind("<ButtonRelease-1>", self.__handle_mouse_release)
+        self.canvas.bind("<ButtonRelease-1>", self.__handle_left_mouse_release)
+        self.canvas.bind("<ButtonRelease-2>", self.__handle_right_mouse_release)
         self._keyboard = Keyboard()
         self._mouse = Mouse()
         self.window.bind("<KeyPress>", self._keyboard._key_press)
         self.window.bind("<KeyRelease>", self._keyboard._key_release)
-        self.window.bind("<Motion>", self._mouse._mouse_move)
-        self.window.bind("<B1-Motion>", self._mouse._mouse_drag_move)
+        self.window.bind("<Motion>", self.__handle_mouse_move)
+        self.window.bind("<B1-Motion>", self.__handle_left_mouse_drag_move)
+        self.window.bind("<B2-Motion>", self.__handle_right_mouse_drag_move)
 
     def set_background_color(self, color: Vertex3f) -> None:
         self.window.configure(bg=v3f_to_hex(color))
@@ -132,10 +133,30 @@ class RendererTk(Renderer):
     def mouse(self) -> Mouse:
         return self._mouse
 
-    def __handle_mouse_release(self, event) -> object:  # type: ignore[no-untyped-def]
-        self._mouse._mouse_release(event)
+    def __handle_left_mouse_release(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_release(MouseButton.LEFT)
         if not self._handle_mouse_click:
             raise Exception("Mouse click callback is not bound")
         else:
-            self._handle_mouse_click(Vertex2f(event.x, event.y))
+            self._handle_mouse_click(Vertex2f(event.x, event.y), MouseButton.LEFT)
+        return {}
+
+    def __handle_right_mouse_release(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_release(MouseButton.RIGHT)
+        if not self._handle_mouse_click:
+            raise Exception("Mouse click callback is not bound")
+        else:
+            self._handle_mouse_click(Vertex2f(event.x, event.y), MouseButton.RIGHT)
+        return {}
+
+    def __handle_mouse_move(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_move(Vertex2f(event.x, event.y))
+        return {}
+
+    def __handle_left_mouse_drag_move(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_drag_move(Vertex2f(event.x, event.y), MouseButton.LEFT)
+        return {}
+
+    def __handle_right_mouse_drag_move(self, event) -> object:  # type: ignore[no-untyped-def]
+        self._mouse._mouse_drag_move(Vertex2f(event.x, event.y), MouseButton.RIGHT)
         return {}

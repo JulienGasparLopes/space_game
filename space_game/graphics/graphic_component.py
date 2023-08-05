@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from graphics.mouse import MouseButton
 
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
@@ -32,5 +33,5 @@ class GraphicComponent(ABC):
         ...
 
     @abstractmethod
-    def on_mouse_click(self, position: Vertex2f) -> bool:
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
         ...

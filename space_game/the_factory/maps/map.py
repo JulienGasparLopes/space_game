@@ -1,5 +1,6 @@
 from typing import cast
 from game_logic.map import Map as BaseMap
+from graphics.mouse import MouseButton
 from graphics.renderer_tk.renderer_tk import RendererTk
 from the_factory.entities.belt import Belt
 from maths.vertex import Vertex2f
@@ -25,6 +26,9 @@ class Map(BaseMap):
             return cast(Belt, possible_targets[0])
         return None
 
-    def on_mouse_click(self, position: Vertex2f) -> bool:
-        self._build_helper.on_mouse_click(position)
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
+        self._build_helper.on_mouse_click(position, mouse_button)
+        if mouse_button == MouseButton.RIGHT:
+            if entities := self.get_entities_at_position(position):
+                print(entities)
         return False

@@ -1,4 +1,5 @@
 from graphics.graphic_component import GraphicComponent
+from graphics.mouse import MouseButton
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.colors import BLACK
 from maths.vertex import Vertex2f
@@ -10,5 +11,5 @@ class GameInfoGui(GraphicComponent):
         text = "Money: " + str(GameContext.get().money)
         renderer.draw_text(Vertex2f(0, 0), text, BLACK)
 
-    def on_mouse_click(self, position: Vertex2f) -> bool:
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
         return False
