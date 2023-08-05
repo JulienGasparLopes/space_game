@@ -1,15 +1,17 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import TYPE_CHECKING
-from maths.colors import GREEN, PURPLE
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, List
+from typing_extensions import override
 from maths.matrix import Matrix
 from maths.vertex import Vertex2f, Vertex3f
 from graphics.renderer import Renderer
 from game_logic.tile import TILE_SIZE
-from maths.colors import BLUE, ORANGE, YELLOW
+from maths.colors import BLUE, ORANGE, GREEN
 from space_game.the_factory.entities.belt import Belt
 from game_logic.entity import Direction, Entity
 from the_factory.entities.material import Material
 from the_factory.context.game_context import GameContext
+from the_factory.logic.material_type import ANY_MATERIAL, IRON, MaterialType
+from the_factory.logic.recipe import Recipe, RecipeLine
 
 if TYPE_CHECKING:
     from the_factory.maps.map import Map
@@ -17,6 +19,8 @@ if TYPE_CHECKING:
 
 class IOFactory(Entity, ABC):
     _buffer: list[Material]
+    _max_amount: int = 0
+    _target_material_type: MaterialType | None = None
 
     _factory_position: Vertex2f = Vertex2f(0, 0)
     _factory_position_offset: Vertex2f
@@ -75,12 +79,16 @@ class IOFactory(Entity, ABC):
             self.direction.vertex.multiplied(TILE_SIZE)
         ).translated(Vertex2f(TILE_SIZE / 2, TILE_SIZE / 2))
 
+    def set_material_info(self, material_type: MaterialType, max_mount: int) -> None:
+        self._target_material_type = material_type
+        self._max_amount = max_mount
+
     @property
     def target_belt_tile_position(self) -> Vertex2f:
         return self._target_belt_position.divided(TILE_SIZE, floor=True)
 
-    @abstractproperty
-    def is_available(self) -> bool:
+    @abstractmethod
+    def is_available(self, amount: int) -> bool:
         ...
 
 
@@ -89,23 +97,32 @@ class FactoryInput(IOFactory):
         super().__init__(BLUE, position_offset, direction)
 
     def update(self, delta_ms: int, map: "Map") -> None:
-        if len(self._buffer) == 0:
+        if not self._target_material_type:
+            return
+
+        if len(self._buffer) < self._max_amount:
             target_belt: Belt = map.get_belt_at_tile_position(
                 self.target_belt_tile_position
             )
             if target_belt:
-                material = target_belt.get_material()
-                if material:
-                    self._buffer.append(material)
+                if target_belt.get_material_type() == self._target_material_type:
+                    material = target_belt.pop_material()
+                    if material:
+                        self._buffer.append(material)
 
-    def get_material(self) -> Material | None:
-        if len(self._buffer) > 0:
-            return self._buffer.pop(0)
-        return None
+    def get_materials(self, amount: int = 1) -> List[Material]:
+        materials: List[Material] = []
+        if not self.is_available(amount):
+            return materials
 
-    @property
-    def is_available(self) -> bool:
-        return len(self._buffer) > 0
+        for _ in range(amount):
+            material = self._buffer.pop(0)
+            if material:
+                materials.append(material)
+        return materials
+
+    def is_available(self, amount: int) -> bool:
+        return len(self._buffer) >= amount
 
 
 class FactoryOutput(IOFactory):
@@ -124,14 +141,13 @@ class FactoryOutput(IOFactory):
                     self._buffer.pop(0)
 
     def insert_material(self, material: Material) -> bool:
-        if len(self._buffer) == 0:
+        if self.is_available(1):
             self._buffer.append(material)
             return True
         return False
 
-    @property
-    def is_available(self) -> bool:
-        return len(self._buffer) == 0
+    def is_available(self, amount: int) -> bool:
+        return self._max_amount - len(self._buffer) >= amount
 
 
 class Factory(Entity, ABC):
@@ -140,9 +156,10 @@ class Factory(Entity, ABC):
 
     _io_mapping: Matrix[IOFactory]
 
-    process_time_ms: int
     _process_counter: int
     _processing: bool
+
+    _recipe: Recipe | None = None
 
     def __init__(
         self,
@@ -150,7 +167,6 @@ class Factory(Entity, ABC):
         height: int,
         inputs: list[FactoryInput],
         outputs: list[FactoryOutput],
-        process_time_ms: int = 1000,
     ) -> None:
         self.inputs = inputs
         self.outputs = outputs
@@ -161,8 +177,7 @@ class Factory(Entity, ABC):
         for output in outputs:
             self._io_mapping.set(output._factory_position_offset, output)
 
-        self.process_time_ms = process_time_ms
-        self._process_counter = process_time_ms
+        self._process_counter = 999999999
         self._processing = False
         super().__init__(GREEN, width * TILE_SIZE, height * TILE_SIZE)
 
@@ -178,18 +193,43 @@ class Factory(Entity, ABC):
             io.render(renderer)
 
     def update(self, delta_ms: int, map: "Map") -> None:
+        if not self._recipe:
+            return
+
+        # Update IOs
         ios: list[IOFactory] = [*self.inputs, *self.outputs]
         for io in ios:
             io.update(delta_ms, map)
 
+        # Update internal counter
         if self.is_processing and self._process_counter > 0:
             self._process_counter -= delta_ms
 
+        # Check process avancement
         if self.is_processing and self._process_counter <= 0:
             processed = self.process_done()
             if processed:
-                self._process_counter = self.process_time_ms
+                self._process_counter = self._recipe.processing_time_ms
                 self._processing = False
+
+        # Check if process can start
+        if not self.is_processing:
+            if self.should_start_processing():
+                self.start_processing()
+
+    def should_start_processing(self) -> bool:
+        if not self.is_processing and self._recipe is not None:
+            may_start_processing = True
+            for idx, input in enumerate(self.inputs):
+                if not input.is_available(self._recipe.get_input_line(idx).amount):
+                    may_start_processing = False
+
+            for idx, output in enumerate(self.outputs):
+                if not output.is_available(self._recipe.get_output_line(idx).amount):
+                    may_start_processing = False
+
+            return may_start_processing
+        return False
 
     def set_tile_position(self, position: Vertex2f) -> None:
         super().set_tile_position(position)
@@ -227,11 +267,41 @@ class Factory(Entity, ABC):
                 io.rotate(clockwise)
 
     def start_processing(self) -> None:
+        if self._recipe:
+            for idx, input in enumerate(self.inputs):
+                input.get_materials(self._recipe.get_input_line(idx).amount)
+            self._process_counter = self._recipe.processing_time_ms
         self._processing = True
 
-    @abstractmethod
+    def set_recipe(self, recipe: Recipe) -> None:
+        self._recipe = recipe
+        self._process_counter = self._recipe.processing_time_ms
+        self._processing = False
+
+        for idx, input in enumerate(self.inputs):
+            recipe_line = self._recipe.get_input_line(idx)
+            input.set_material_info(recipe_line.material_type, recipe_line.amount)
+
+        for idx, output in enumerate(self.outputs):
+            recipe_line = self._recipe.get_output_line(idx)
+            output.set_material_info(recipe_line.material_type, recipe_line.amount)
+
     def process_done(self) -> bool:
-        ...
+        if not self._recipe:
+            return False
+
+        may_end_processing = True
+        for idx, output in enumerate(self.outputs):
+            if not output.is_available(self._recipe.get_output_line(idx).amount):
+                may_end_processing = False
+        if may_end_processing:
+            for idx, output in enumerate(self.outputs):
+                output.insert_material(
+                    Material.from_type(self._recipe.get_output_line(idx).material_type)
+                )
+            return True
+
+        return False
 
     @property
     def is_processing(self) -> bool:
@@ -244,33 +314,24 @@ class Factory(Entity, ABC):
 
 class MaterialChute(Factory):
     def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
-        super().__init__(1, 1, [], [FactoryOutput(Vertex2f(0, 0), direction)], delay)
+        super().__init__(1, 1, [], [FactoryOutput(Vertex2f(0, 0), direction)])
         self._direction = direction
+        self.set_recipe(Recipe([], [RecipeLine(IRON, 1)], delay))
 
-    def process_done(self) -> bool:
-        return self.outputs[0].insert_material(Material(YELLOW))
-
-    def update(self, delta_ms: int, map: "Map") -> None:
-        super().update(delta_ms, map)
-        if not self.is_processing:
-            if GameContext.get().money_transaction(-20):
-                self.start_processing()
+    @override
+    def should_start_processing(self) -> bool:
+        should_start = super().should_start_processing()
+        return should_start and GameContext.get().money_transaction(-20)
 
 
 class MaterialSeller(Factory):
     def __init__(self, delay: int, direction: Direction = Direction.EAST) -> None:
-        super().__init__(1, 1, [FactoryInput(Vertex2f(0, 0), direction)], [], delay)
+        super().__init__(1, 1, [FactoryInput(Vertex2f(0, 0), direction)], [])
         self._direction = direction
+        self.set_recipe(Recipe([RecipeLine(ANY_MATERIAL, 1)], [], delay))
 
     def process_done(self) -> bool:
         return GameContext.get().money_transaction(100)
-
-    def update(self, delta_ms: int, map: "Map") -> None:
-        super().update(delta_ms, map)
-        if not self.is_processing:
-            material = self.inputs[0].get_material()
-            if material:
-                self.start_processing()
 
 
 class Transformator(Factory):
@@ -278,19 +339,6 @@ class Transformator(Factory):
         inputs = [FactoryInput(Vertex2f(0, 1), direction=Direction.WEST)]
         outputs = [FactoryOutput(Vertex2f(2, 1), direction=Direction.EAST)]
         super().__init__(3, 3, inputs, outputs)
-
-    def update(self, delta_ms: int, map: "Map") -> None:
-        super().update(delta_ms, map)
-
-        if not self.is_processing and self.outputs[0].is_available:
-            material = self.inputs[0].get_material()
-            if material:
-                self.start_processing()
-
-    def process_done(self) -> bool:
-        if self.outputs[0].is_available:
-            return self.outputs[0].insert_material(Material(ORANGE))
-        return False
 
 
 class Fabricator(Factory):
@@ -303,17 +351,3 @@ class Fabricator(Factory):
             FactoryOutput(Vertex2f(4, 2), direction=Direction.EAST),
         ]
         super().__init__(5, 5, inputs, outputs)
-
-    def update(self, delta_ms: int, map: "Map") -> None:
-        super().update(delta_ms, map)
-
-        if not self.is_processing and self.outputs[0].is_available:
-            if self.inputs[0].is_available and self.inputs[1].is_available:
-                self.inputs[0].get_material()
-                self.inputs[1].get_material()
-                self.start_processing()
-
-    def process_done(self) -> bool:
-        if self.outputs[0].is_available:
-            return self.outputs[0].insert_material(Material(PURPLE))
-        return False

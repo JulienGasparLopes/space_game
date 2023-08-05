@@ -5,6 +5,7 @@ from graphics.renderer_tk.renderer_tk import Image
 from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
 from the_factory.entities.material import Material
+from the_factory.logic.material_type import MaterialType
 
 if TYPE_CHECKING:
     from the_factory.maps.map import Map
@@ -75,13 +76,16 @@ class Belt(Entity):
 
         return False
 
-    def get_material(self) -> Material | None:
+    def pop_material(self) -> Material | None:
         if self._material_on_belt:
             material = self._material_on_belt
             self._material_on_belt = None
             self._time_ms_on_belt = self._time_ms_per_segment
             return material
         return None
+
+    def get_material_type(self) -> MaterialType | None:
+        return self._material_on_belt.material_type if self._material_on_belt else None
 
     def update(self, delta_ms: int, map: "Map") -> None:
         if self._material_on_belt and not self._material_on_output:

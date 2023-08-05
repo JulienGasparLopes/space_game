@@ -6,7 +6,7 @@ class GameContext:
     _selected_build_entity_type: type[Entity] | None = None
 
     def __init__(self) -> None:
-        self._money = 1050
+        self._money = 1000
 
     @staticmethod
     def get() -> "GameContext":
