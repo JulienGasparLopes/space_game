@@ -27,9 +27,10 @@ Focused on factory management/optimisation with money, energy, production defaul
 - Entity collisions (overlapping) - OK
 - Menu abstraction + Editor - OK
 - Editor (+ multi-placement + deletion + object rotation) - OK
-- Material configuration and Crafting recipes - WIP
+- Material configuration and Crafting recipes - OK
+- Front: Edit factory current recipe - WIP
 - Money system - Next
-- Factory occupation % (idle, runing, blocked) - Todo
+- Factory occupation % (idle, runing, blocked) - Todo + fix blocked state
 
 - Front/Back total division - Todo
 
