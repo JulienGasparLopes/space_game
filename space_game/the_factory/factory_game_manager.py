@@ -1,9 +1,12 @@
 from game_logic.game_manager import GameManager
 from graphics.renderer_tk.renderer_tk import RendererTk
 from maths.vertex import Vertex2f
+from the_factory.context.game_context import GameContext
+from the_factory.entities.factory import Fabricator, Transformator
 from the_factory.factory_tile import GROUND
 from the_factory.gui.current_inventory_gui import CurrentInventoryGui
 from the_factory.gui.game_info_gui import GameInfoGui
+from the_factory.logic.recipe import BOLT_BASIC, HEAVY_PLATE_BASIC, SHEET_BASIC
 from the_factory.maps.map_test import MapTest
 
 
@@ -23,6 +26,11 @@ class FactoryGameManager(GameManager):
                 map.terrain[x][y] = GROUND
 
         self.set_current_map(map)
+
+        recipe_manager = GameContext.get().recipe_manager
+        recipe_manager.add_recipe(Transformator, BOLT_BASIC)
+        recipe_manager.add_recipe(Transformator, SHEET_BASIC)
+        recipe_manager.add_recipe(Fabricator, HEAVY_PLATE_BASIC)
 
     def update(self, delta_ms: int) -> None:
         ratio = 20

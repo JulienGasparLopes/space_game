@@ -14,7 +14,12 @@ class Button(GraphicComponent, ABC):
         self.bounds = bounds
 
     def render(self, renderer: Renderer) -> None:
-        renderer.draw_rect(self.position, self.position.translated(self.bounds), RED)
+        renderer.draw_rect(
+            self.position,
+            self.position.translated(self.bounds),
+            RED,
+            z_index=self.z_index,
+        )
 
     def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
         if (
