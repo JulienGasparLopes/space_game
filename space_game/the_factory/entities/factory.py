@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 
 class Factory(Entity, ABC):
-    inputs: list[FactoryInput]
-    outputs: list[FactoryOutput]
+    _inputs: list[FactoryInput]
+    _outputs: list[FactoryOutput]
 
     _io_mapping: Matrix[IOFactory]
 
@@ -35,8 +35,8 @@ class Factory(Entity, ABC):
         inputs: list[FactoryInput],
         outputs: list[FactoryOutput],
     ) -> None:
-        self.inputs = inputs
-        self.outputs = outputs
+        self._inputs = inputs
+        self._outputs = outputs
 
         self._io_mapping = Matrix.from_size(width, height, initial_value=None)
         for input in inputs:
@@ -55,7 +55,7 @@ class Factory(Entity, ABC):
         elif self.is_processing:
             self.content = Vertex3f(0, 200, 50)
         super().render(renderer)
-        ios: list[IOFactory] = [*self.inputs, *self.outputs]
+        ios: list[IOFactory] = [*self._inputs, *self._outputs]
         for io in ios:
             io.render(renderer)
 
@@ -64,7 +64,7 @@ class Factory(Entity, ABC):
             return
 
         # Update IOs
-        ios: list[IOFactory] = [*self.inputs, *self.outputs]
+        ios: list[IOFactory] = [*self._inputs, *self._outputs]
         for io in ios:
             io.update(delta_ms, map)
 
@@ -87,11 +87,11 @@ class Factory(Entity, ABC):
     def should_start_processing(self) -> bool:
         if not self.is_processing and self._recipe is not None:
             may_start_processing = True
-            for idx, input in enumerate(self.inputs):
+            for idx, input in enumerate(self._inputs):
                 if not input.is_available(self._recipe.get_input_line(idx).amount):
                     may_start_processing = False
 
-            for idx, output in enumerate(self.outputs):
+            for idx, output in enumerate(self._outputs):
                 if not output.is_available(self._recipe.get_output_line(idx).amount):
                     may_start_processing = False
 
@@ -100,7 +100,7 @@ class Factory(Entity, ABC):
 
     def set_tile_position(self, position: Vertex2f) -> None:
         super().set_tile_position(position)
-        ios: list[IOFactory] = [*self.inputs, *self.outputs]
+        ios: list[IOFactory] = [*self._inputs, *self._outputs]
         for io in ios:
             io.update_position(self.position)
 
@@ -111,7 +111,7 @@ class Factory(Entity, ABC):
         bound_to_tile: bool = False,
     ) -> None:
         super().set_position(position, is_center_position, bound_to_tile)
-        ios: list[IOFactory] = [*self.inputs, *self.outputs]
+        ios: list[IOFactory] = [*self._inputs, *self._outputs]
         for io in ios:
             io.update_position(self.position)
 
@@ -135,7 +135,7 @@ class Factory(Entity, ABC):
 
     def start_processing(self) -> None:
         if self._recipe:
-            for idx, input in enumerate(self.inputs):
+            for idx, input in enumerate(self._inputs):
                 input.get_materials(self._recipe.get_input_line(idx).amount)
             self._process_counter = self._recipe.processing_time_ms
         self._processing = True
@@ -145,11 +145,11 @@ class Factory(Entity, ABC):
         self._process_counter = self._recipe.processing_time_ms
         self._processing = False
 
-        for idx, input in enumerate(self.inputs):
+        for idx, input in enumerate(self._inputs):
             recipe_line = self._recipe.get_input_line(idx)
             input.set_material_info(recipe_line.material_type, recipe_line.amount)
 
-        for idx, output in enumerate(self.outputs):
+        for idx, output in enumerate(self._outputs):
             recipe_line = self._recipe.get_output_line(idx)
             output.set_material_info(recipe_line.material_type, recipe_line.amount)
 
@@ -158,11 +158,11 @@ class Factory(Entity, ABC):
             return False
 
         may_end_processing = True
-        for idx, output in enumerate(self.outputs):
+        for idx, output in enumerate(self._outputs):
             if not output.is_available(self._recipe.get_output_line(idx).amount):
                 may_end_processing = False
         if may_end_processing:
-            for idx, output in enumerate(self.outputs):
+            for idx, output in enumerate(self._outputs):
                 output.insert_material(
                     Material.from_type(self._recipe.get_output_line(idx).material_type)
                 )
