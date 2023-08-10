@@ -1,6 +1,7 @@
 from maths.vertex import Vertex2f
 from the_factory.entities.belt import Belt
 from game_logic.entity import Direction
+from the_factory.entities.divider import Divider
 from the_factory.entities.factory import (
     Fabricator,
     MaterialChute,
@@ -14,7 +15,8 @@ from the_factory.logic.recipe import BOLT_BASIC, SHEET_BASIC, HEAVY_PLATE_BASIC
 class MapTest(Map):
     def __init__(self, width: int, height: int) -> None:
         super().__init__(width, height)
-        # self.minimal_map()
+        self.minimal_map()
+        return
         self.full_map()
 
     def minimal_map(self) -> None:
@@ -27,14 +29,14 @@ class MapTest(Map):
             belt.set_tile_position(position)
             self.entities.append(belt)
 
-        create_belt(Direction.EAST, Vertex2f(1, 3))
-        create_belt(Direction.EAST, Vertex2f(2, 3))
-        create_belt(Direction.EAST, Vertex2f(3, 3))
-
         transfo1 = Transformator()
         transfo1.set_recipe(BOLT_BASIC)
         transfo1.set_tile_position(Vertex2f(4, 2))
         self.entities.append(transfo1)
+
+        create_belt(Direction.EAST, Vertex2f(1, 3))
+        create_belt(Direction.EAST, Vertex2f(2, 3))
+        create_belt(Direction.EAST, Vertex2f(3, 3))
 
     def full_map(self) -> None:
         chute1 = MaterialChute(250)
@@ -100,3 +102,16 @@ class MapTest(Map):
         # fab1 to seller1
         for i in range(6, 13):
             create_belt(Direction.SOUTH, Vertex2f(19, i))
+
+        # chute3, test divider
+        create_belt(Direction.EAST, Vertex2f(2, 12))
+        create_belt(Direction.EAST, Vertex2f(3, 12))
+        divider = Divider(Direction.EAST)
+        divider.set_tile_position(Vertex2f(4, 12))
+        self.entities.append(divider)
+        create_belt(Direction.EAST, Vertex2f(5, 12))
+        create_belt(Direction.EAST, Vertex2f(6, 12))
+        create_belt(Direction.EAST, Vertex2f(4, 11))
+        create_belt(Direction.EAST, Vertex2f(5, 11))
+        create_belt(Direction.EAST, Vertex2f(4, 13))
+        create_belt(Direction.EAST, Vertex2f(5, 13))

@@ -2,7 +2,7 @@ from typing import cast
 from game_logic.map import Map as BaseMap
 from graphics.mouse import MouseButton
 from graphics.renderer_tk.renderer_tk import RendererTk
-from the_factory.entities.belt import Belt
+from the_factory.entities.base_belt import BaseBelt
 from maths.vertex import Vertex2f
 from the_factory.maps.build_helper import BuildHelper
 from the_factory.maps.factory_edit_helper import FactoryEditHelper
@@ -22,12 +22,14 @@ class Map(BaseMap):
         self._build_helper.render(renderer)
         self._factory_edit_helper.render(renderer)
 
-    def get_belt_at_tile_position(self, tile_position: Vertex2f) -> Belt | None:
+    def get_belt_at_tile_position(self, tile_position: Vertex2f) -> BaseBelt | None:
         possible_targets = [
-            e for e in self.get_entities_at_tile(tile_position) if type(e) == Belt
+            e
+            for e in self.get_entities_at_tile(tile_position)
+            if isinstance(e, BaseBelt)
         ]
         if len(possible_targets) == 1:
-            return cast(Belt, possible_targets[0])
+            return cast(BaseBelt, possible_targets[0])
         return None
 
     def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:

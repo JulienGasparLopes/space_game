@@ -9,6 +9,7 @@ from maths.vertex import Vertex2f
 from the_factory.context.game_context import GameContext
 from the_factory.entities.belt import Belt
 from the_factory.entities.delete_plot import DeletePlot
+from the_factory.entities.divider import Divider
 from the_factory.entities.factory import Fabricator, Transformator
 
 
@@ -33,7 +34,7 @@ class CurrentInventoryGui(GraphicComponent):
         button_size = Vertex2f(50, 50)
         gap_size = 20
         x = 20
-        for entity_type in [Belt, Transformator, Fabricator, DeletePlot]:
+        for entity_type in [Belt, Divider, Transformator, Fabricator, DeletePlot]:
             self.buttons.append(
                 InventoryButton(Vertex2f(x, 20), button_size, entity_type)
             )
@@ -45,8 +46,8 @@ class CurrentInventoryGui(GraphicComponent):
         self.listen_keys(renderer)
 
     def listen_keys(self, renderer: RendererTk) -> None:
-        for key in ["1", "2", "3", "4"]:
-            if renderer.keyboard.consume_key(key):
+        for idx, key in enumerate(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]):
+            if len(self.buttons) >= (idx + 1) and renderer.keyboard.consume_key(key):
                 self.buttons[int(key) - 1].action()
 
     def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> bool:
