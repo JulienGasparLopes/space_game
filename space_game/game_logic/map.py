@@ -68,7 +68,9 @@ class Map(GraphicComponent, ABC):
             or position.y >= self.height
         ):
             return None
-        return self.terrain[position.x][position.y]
+        if position.x != int(position.x) or position.y != int(position.y):
+            raise ValueError("Position must be integer")
+        return self.terrain[int(position.x)][int(position.y)]
 
     def get_entities_at_position(self, position: Vertex2f) -> list[Entity]:
         valid_entities = []

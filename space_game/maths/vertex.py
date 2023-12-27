@@ -39,6 +39,10 @@ class Vertex2f:
     def y(self) -> float:
         return self._y
 
+    @property
+    def norm(self) -> float:
+        return (self._x**2 + self._y**2) ** 0.5
+
 
 @dataclass
 class Vertex3f:
