@@ -1,4 +1,8 @@
 from enum import Enum
+from the_crystal_clear.entities.characteristics import (
+    Characteristics,
+    MultiplierCharacteristics,
+)
 from the_crystal_clear.items.affixe import Affixe
 
 
@@ -11,7 +15,19 @@ class Rarity(Enum):
 
 
 class Item:
-    suffixes: list[Affixe]
-    prefixes: list[Affixe]
+    suffixes: list[Affixe] = []
+    prefixes: list[Affixe] = []
 
     rarity: Rarity
+
+    @property
+    def affixes(self) -> list[Affixe]:
+        return self.suffixes + self.prefixes
+
+    def update_characteristics(
+        self,
+        characteristics: Characteristics,
+        multiplier_characteristics: MultiplierCharacteristics,
+    ) -> None:
+        for affixe in self.affixes:
+            affixe.update_characteristics(characteristics, multiplier_characteristics)
