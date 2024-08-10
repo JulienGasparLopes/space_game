@@ -74,9 +74,14 @@ class Entity(ABC):
             z_index,
         )
 
-    def set_tile_position(self, position: Vertex2f) -> None:
+    def set_tile_position(self, position: Vertex2f, center: bool = False) -> None:
         self._tile_position = position.clone()
-        self._position = position.multiplied(TILE_SIZE)
+        if center:
+            self._position = position.multiplied(TILE_SIZE).translated(
+                Vertex2f((TILE_SIZE - self.width) / 2, (TILE_SIZE - self.height) / 2)
+            )
+        else:
+            self._position = position.multiplied(TILE_SIZE)
 
     def set_position(
         self,

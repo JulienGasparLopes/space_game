@@ -31,7 +31,9 @@ class Renderer(ABC):
         ...
 
     @abstractmethod
-    def draw_text(self, p: Vertex2f, text: str, z_index: int = 0) -> None:
+    def draw_text(
+        self, p: Vertex2f, text: str, color: Vertex3f, z_index: int = 0
+    ) -> None:
         ...
 
     @property
