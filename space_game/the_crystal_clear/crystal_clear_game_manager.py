@@ -1,11 +1,13 @@
 from graphics.button import Button
 from maths.vertex import Vertex2f
+from the_crystal_clear.graphics.views.base_view import View
 from the_crystal_clear.map import Map
 from game_logic.game_manager import GameManager
 
 
 class CrystalClearGameManager(GameManager):
     current_map: Map
+    current_view: View
 
     def __init__(self) -> None:
         super().__init__()
@@ -19,6 +21,12 @@ class CrystalClearGameManager(GameManager):
         self.graphic_manager.add_component(
             SkillButton(Vertex2f(50, 250), map, Skill(3, 560))
         )
+
+    def set_current_view(self, view: View) -> None:
+        self.graphic_manager.clear()
+        for menu in view.menus:
+            for component in menu.components:
+                self.graphic_manager.add_component(component)
 
     def update(self, delta_ms: int) -> None:
         ...

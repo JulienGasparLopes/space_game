@@ -20,11 +20,5 @@ class SpaceGameManager(BaseGameManager):
 
         self.set_current_map(map)
 
-    def on_mouse_click(self, position: Vertex2f) -> None:
-        tile_x = position.x // TILE_SIZE
-        tile_y = position.y // TILE_SIZE
-
-        self.current_map.terrain[tile_x][tile_y] = (
-            WALL if self.current_map.terrain[tile_x][tile_y] == GROUND else GROUND
-        )
-        self.current_map._update_rooms()
+    def update(self, delta_ms: int) -> None:
+        self.current_map.update(delta_ms)

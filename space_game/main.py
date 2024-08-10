@@ -8,10 +8,10 @@ from the_crystal_clear.crystal_clear_game_manager import CrystalClearGameManager
 def main() -> None:
     print("Launch app")
 
-    # game_manager = SpaceGameManager()
+    game_manager = SpaceGameManager()
     # game_manager = FactoryGameManager()
     # game_manager = WandererGameManager()
-    game_manager = CrystalClearGameManager()
+    # game_manager = CrystalClearGameManager()
 
     game_manager.start()
 

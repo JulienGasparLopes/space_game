@@ -1,16 +1,24 @@
 from game_logic.map import Map as BaseMap
+from game_logic.tile import TILE_SIZE
+from graphics.mouse import MouseButton
+from graphics.renderer import Renderer
 from maths.vertex import Vertex2f
 from maths.colors import BLUE
 from game_logic.room import Room
 from game_logic.entity import Entity
+from the_space.space_tile import GROUND, WALL
+
+
+class LocalEntity(Entity):
+    def update(self, delta_ms: int, map: "Map") -> None: ...
 
 
 class Map(BaseMap):
     def __init__(self, width: int, height: int) -> None:
         super().__init__(width, height)
 
-        workbench = Entity(BLUE)
-        workbench._tile_position = Vertex2f(6, 3)
+        workbench = LocalEntity(BLUE)
+        workbench.set_tile_position(Vertex2f(6, 3))
         self.entities.append(workbench)
 
     def _update_rooms(self) -> None:
@@ -45,3 +53,18 @@ class Map(BaseMap):
 
             if room_closed:
                 self.rooms.append(Room(room_tiles))
+
+    def render(self, renderer: Renderer) -> None:
+        super().render(renderer)
+
+        for room in self.rooms:
+            room.render(renderer)
+
+    def on_mouse_click(self, position: Vertex2f, mouse_button: MouseButton) -> None:
+        tile_x = position.x // TILE_SIZE
+        tile_y = position.y // TILE_SIZE
+
+        self.terrain[tile_x][tile_y] = (
+            WALL if self.terrain[tile_x][tile_y] == GROUND else GROUND
+        )
+        self._update_rooms()

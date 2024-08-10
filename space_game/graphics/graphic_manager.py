@@ -19,6 +19,9 @@ class GraphicManager:
     def remove_component(self, component: GraphicComponent) -> None:
         self._components.remove(component)
 
+    def clear(self) -> None:
+        self._components.clear()
+
     def render(self) -> None:
         self._renderer.render_start()
         for component in self._components:
